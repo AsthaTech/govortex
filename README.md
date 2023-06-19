@@ -1,3 +1,4 @@
+[![Go Reference](https://pkg.go.dev/badge/github.com/AsthaTech/govortex.svg)](https://pkg.go.dev/github.com/AsthaTech/govortex)
 # Vortex API Golang Client
 
 
