@@ -1,0 +1,672 @@
+package govortex // import "github.com/AsthaTech/govortex"
+
+
+CONSTANTS
+
+const (
+	URILogin        string = "/user/login"
+	URIInstruments  string = "/data/instruments"
+	URIPlaceOrder   string = "/orders/%s"       // "/orders/regular"
+	URIModifyOrder  string = "/orders/%s/%s/%s" //"/orders/regular/{exchange}/{order_id}"
+	URIDeleterOrder string = "/orders/%s/%s/%s" //"/orders/regular/{exchange}/{order_id}"
+	URIOrderBook    string = "/orders"          //"/orders?limit={limit}&offset={offset}"
+	URIOrderHistory string = "/orders/%s"       //"/orders/{order_id}"
+	URITrades       string = "/trades"
+
+	URIPositions string = "/portfolio/positions"
+	URIHoldings  string = "/portfolio/holdings"
+
+	URIFunds       string = "/user/funds"
+	URIOrderMargin string = "/margins/order"
+	URIQuotes      string = "/data/quote"
+	URIHistory     string = "/data/history"
+)
+    Constants for the API endpoints
+
+const (
+	GeneralError    = "GeneralException"
+	TokenError      = "TokenException"
+	PermissionError = "PermissionError"
+	UserError       = "UserException"
+	TwoFAError      = "TwoFAException"
+	OrderError      = "OrderException"
+	InputError      = "InputException"
+	DataError       = "DataException"
+	NetworkError    = "NetworkException"
+)
+
+FUNCTIONS
+
+func GetErrorName(code int) string
+    GetErrorName returns an error name given an HTTP code.
+
+func NewError(etype string, message string, data interface{}) error
+    NewError creates and returns a new instace of Error with custom error
+    metadata.
+
+
+TYPES
+
+type Error struct {
+	Code      int
+	ErrorType string
+	Message   string
+	Data      interface{}
+}
+    Error is the error type used for all API errors.
+
+func (e Error) Error() string
+    This makes Error a valid Go error type.
+
+type ExchangeDetails struct {
+	Token    int    `json:"token"`
+	Exchange string `json:"exchange"`
+	Symbol   string `json:"symbol"`
+}
+
+type ExchangeTypes string
+
+const (
+	ExchangeTypesNSEFO       ExchangeTypes = "NSE_FO"
+	ExchangeTypesNSEEQUITY   ExchangeTypes = "NSE_EQ"
+	ExchangeTypesNSECURRENCY ExchangeTypes = "NSE_CD"
+	ExchangeTypesMCX         ExchangeTypes = "MCX_FO"
+)
+type FullQuoteData struct {
+	Exchange          string      `json:"exchange"`
+	Token             int         `json:"token"`
+	LastTradeTime     int         `json:"last_trade_time"`
+	LastUpdateTime    int         `json:"last_update_time"`
+	LastTradePrice    float64     `json:"last_trade_price"`
+	Volume            int         `json:"volume"`
+	AverageTradePrice float64     `json:"average_trade_price"`
+	TotalBuyQuantity  int64       `json:"total_buy_quantity"`
+	TotalSellQuantity int64       `json:"total_sell_quantity"`
+	OpenInterest      int         `json:"open_interest"`
+	OpenPrice         float64     `json:"open_price"`
+	HighPrice         float64     `json:"high_price"`
+	LowPrice          float64     `json:"low_price"`
+	ClosePrice        float64     `json:"close_price"`
+	LastTradeQuantity int         `json:"last_trade_quantity"`
+	Depth             *QuoteDepth `json:"depth"`
+	DPRHigh           float64     `json:"dpr_high"`
+	DPRLow            float64     `json:"dpr_low"`
+}
+
+type FundDetails struct {
+	Deposit             float64 `json:"deposit"`
+	FundsTransferred    float64 `json:"funds_transferred"`
+	Collateral          float64 `json:"collateral"`
+	CreditForSale       float64 `json:"credit_for_sale"`
+	OptionCreditForSale float64 `json:"option_credit_for_sale"`
+	LimitUtilization    float64 `json:"limit_utilization"`
+	FundsWithdrawn      float64 `json:"funds_withdrawn"`
+	MtmAndBookedLoss    float64 `json:"mtm_and_booked_loss"`
+	BookedProfit        float64 `json:"booked_profit"`
+	TotalTradingPower   float64 `json:"total_trading_power"`
+	TotalUtilization    float64 `json:"total_utilization"`
+	NetAvailable        float64 `json:"net_available"`
+}
+
+type FundsResponse struct {
+	NSE FundDetails `json:"nse"`
+	MCX FundDetails `json:"mcx"`
+}
+
+type HTTPClient interface {
+	GetClient() *httpClient
+	// Has unexported methods.
+}
+    HTTPClient defines the interface for performing HTTP requests.
+
+func NewHTTPClient(h *http.Client, hLog *log.Logger, debug bool) HTTPClient
+    NewHTTPClient creates a new instance of the httpClient with the given HTTP
+    client, logger, and debug flag. If the logger is nil, it uses a default
+    logger that writes to os.Stdout. If the HTTP client is nil, it uses a
+    default client with a 5-second timeout and default transport settings.
+
+type HTTPResponse struct {
+	Body     []byte
+	Response *http.Response
+}
+    HTTPResponse contains the response body and the HTTP response object.
+
+type HistoricalResponse struct {
+	S string    `json:"s"`
+	T []int     `json:"t"`
+	O []float64 `json:"o"`
+	H []float64 `json:"h"`
+	L []float64 `json:"l"`
+	C []float64 `json:"c"`
+	V []float64 `json:"v"`
+}
+
+type Holding struct {
+	ISIN               string          `json:"isin"`
+	NSE                ExchangeDetails `json:"nse"`
+	BSE                ExchangeDetails `json:"bse"`
+	TotalFree          int             `json:"total_free"`
+	DPFree             int             `json:"dp_free"`
+	PoolFree           int             `json:"pool_free"`
+	T1Quantity         int             `json:"t1_quantity"`
+	AveragePrice       float64         `json:"average_price"`
+	CollateralQuantity int             `json:"collateral_quantity"`
+	CollateralValue    float64         `json:"collateral_value"`
+}
+
+type HoldingsResponse struct {
+	Status string    `json:"status"`
+	Data   []Holding `json:"data"`
+}
+
+type LoginResponse struct {
+	Status string   `json:"status"`
+	Data   UserData `json:"data"`
+}
+
+type LtpQuoteData struct {
+	Exchange       string  `json:"exchange"`
+	Token          int     `json:"token"`
+	LastTradePrice float64 `json:"last_trade_price"`
+}
+
+type MarginModes string
+
+const (
+	MarginModeNew    MarginModes = "NEW"
+	MarginModeMODIFY MarginModes = "MODIFY"
+)
+type MarginResponse struct {
+	Status    string  `json:"status"`
+	Required  float64 `json:"required"`
+	Available float64 `json:"available"`
+}
+
+type MarketDepthResponse struct {
+	Status string     `json:"status"`
+	Data   QuoteDepth `json:"data"`
+}
+
+type ModifyOrderRequest struct {
+	Variety           VarietyTypes  `json:"variety"`
+	Quantity          int           `json:"quantity"`
+	TradedQuantity    int           `json:"traded_quantity"`
+	Price             float64       `json:"price"`
+	TriggerPrice      float64       `json:"trigger_price"`
+	DisclosedQuantity int           `json:"disclosed_quantity"`
+	Validity          ValidityTypes `json:"validity"`
+	ValidityDays      int           `json:"validity_days"`
+}
+
+type OhlcvQuoteData struct {
+	Exchange       string  `json:"exchange"`
+	Token          int     `json:"token"`
+	LastTradePrice float64 `json:"last_trade_price"`
+	LastTradeTime  int     `json:"last_trade_time"`
+	Volume         int     `json:"volume"`
+	OpenPrice      float64 `json:"open_price"`
+	HighPrice      float64 `json:"high_price"`
+	LowPrice       float64 `json:"low_price"`
+	ClosePrice     float64 `json:"close_price"`
+}
+
+type Order struct {
+	OrderID                    string  `json:"order_id"`
+	Exchange                   string  `json:"exchange"`
+	Token                      int     `json:"token"`
+	OrderNumber                string  `json:"order_number"`
+	Status                     string  `json:"status"`
+	ErrorReason                string  `json:"error_reason"`
+	TransactionType            string  `json:"transaction_type"`
+	Product                    string  `json:"product"`
+	Variety                    string  `json:"variety"`
+	TotalQuantity              int     `json:"total_quantity"`
+	PendingQuantity            int     `json:"pending_quantity"`
+	TradedQuantity             int     `json:"traded_quantity"`
+	DisclosedQuantity          int     `json:"disclosed_quantity"`
+	DisclosedQuantityRemaining int     `json:"disclosed_quantity_remaining"`
+	OrderPrice                 float64 `json:"order_price"`
+	TriggerPrice               float64 `json:"trigger_price"`
+	TradedPrice                float64 `json:"traded_price"`
+	Validity                   string  `json:"validity"`
+	ValidityDays               int     `json:"validity_days"`
+	Symbol                     string  `json:"symbol"`
+	Series                     string  `json:"series"`
+	InstrumentName             string  `json:"instrument_name"`
+	ExpiryDate                 string  `json:"expiry_date"`
+	StrikePrice                float64 `json:"strike_price"`
+	OptionType                 string  `json:"option_type"`
+	LotSize                    int     `json:"lot_size"`
+	OrderCreatedAt             string  `json:"order_created_at"`
+	InitiatedBy                string  `json:"initiated_by"`
+	ModifiedBy                 string  `json:"modified_by"`
+	IsAMO                      bool    `json:"is_amo"`
+	OrderIdentifier            string  `json:"order_identifier"`
+}
+
+type OrderBookResponse struct {
+	Status   string  `json:"status"`
+	Orders   []Order `json:"orders"`
+	Metadata struct {
+		TotalRecords     int `json:"total_records"`
+		AllRecords       int `json:"all_records"`
+		CompletedRecords int `json:"completed_records"`
+		OpenRecords      int `json:"open_records"`
+	} `json:"metadata"`
+}
+
+type OrderMarginRequest struct {
+	Exchange        ExchangeTypes    `json:"exchange"`
+	Token           int              `json:"token"`
+	TransactionType TransactionTypes `json:"transaction_type"`
+	Product         ProductTypes     `json:"product"`
+	Variety         VarietyTypes     `json:"variety"`
+	Quantity        int              `json:"quantity"`
+	Price           float64          `json:"price"`
+	OldPrice        float64          `json:"old_price"`
+	OldQuantity     int              `json:"old_quantity"`
+	Mode            MarginModes      `json:"mode"`
+}
+
+type OrderResponse struct {
+	Status  string `json:"status"`
+	Code    string `json:"code"`
+	Message string `json:"message"`
+	Data    struct {
+		OrderID string `json:"orderId"`
+	} `json:"data"`
+}
+
+type Packet struct {
+	Exchange          [10]byte `json:"exchange"`
+	Token             int32    `json:"token"`
+	LastTradePrice    float64  `json:"last_trade_price"`
+	LastTradeTime     int32    `json:"last_trade_time"`
+	OpenPrice         float64  `json:"open_price"`
+	HighPrice         float64  `json:"high_price"`
+	LowPrice          float64  `json:"low_price"`
+	ClosePrice        float64  `json:"close_price"`
+	Volume            int32    `json:"volume"`
+	LastUpdateTime    int32    `json:"last_update_time,omitempty"`
+	LastTradeQuantity int32    `json:"last_trade_quantity,omitempty"`
+	AverageTradePrice float64  `json:"average_trade_price,omitempty"`
+	TotalBuyQuantity  int64    `json:"total_buy_quantity,omitempty"`
+	TotalSellQuantity int64    `json:"total_sell_quantity,omitempty"`
+	OpenInterest      int32    `json:"open_interest,omitempty"`
+	Depth             struct {
+		Buy [5]struct {
+			Price    float64 `json:"price,omitempty"`
+			Quantity int32   `json:"quantity,omitempty"`
+			Orders   int32   `json:"orders,omitempty"`
+		} `json:"buy,omitempty"`
+		Sell [5]struct {
+			Price    float64 `json:"price,omitempty"`
+			Quantity int32   `json:"quantity,omitempty"`
+			Orders   int32   `json:"orders,omitempty"`
+		} `json:"sell,omitempty"`
+	} `json:"depth,omitempty"`
+	DPRHigh int32 `json:"dpr_high,omitempty"`
+	DPRLow  int32 `json:"dpr_low,omitempty"`
+}
+
+type PlaceOrderRequest struct {
+	Exchange          ExchangeTypes    `json:"exchange"`
+	Token             int              `json:"token"`
+	TransactionType   TransactionTypes `json:"transaction_type"`
+	Product           ProductTypes     `json:"product"`
+	Variety           VarietyTypes     `json:"variety"`
+	Quantity          int              `json:"quantity"`
+	Price             float64          `json:"price"`
+	TriggerPrice      float64          `json:"trigger_price"`
+	DisclosedQuantity int              `json:"disclosed_quantity"`
+	Validity          ValidityTypes    `json:"validity"`
+	ValidityDays      int              `json:"validity_days"`
+	IsAMO             bool             `json:"is_amo"`
+}
+
+type Position struct {
+	Exchange              string  `json:"exchange"`
+	Symbol                string  `json:"symbol"`
+	ExpiryDate            string  `json:"expiry_date"`
+	OptionType            string  `json:"option_type"`
+	Token                 int     `json:"token"`
+	Product               string  `json:"product"`
+	Quantity              int     `json:"quantity"`
+	OvernightBuyValue     float64 `json:"overnight_buy_value"`
+	OvernightSellValue    float64 `json:"overnight_sell_value"`
+	OvernightAveragePrice float64 `json:"overnight_average_price"`
+	LotSize               int     `json:"lot_size"`
+	Multiplier            float64 `json:"multiplier"`
+	AveragePrice          float64 `json:"average_price"`
+	Value                 float64 `json:"value"`
+	BuyValue              float64 `json:"buy_value"`
+	SellValue             float64 `json:"sell_value"`
+	BuyQuantity           int     `json:"buy_quantity"`
+	SellQuantity          int     `json:"sell_quantity"`
+	BuyPrice              float64 `json:"buy_price"`
+	SellPrice             float64 `json:"sell_price"`
+}
+
+type PositionData struct {
+	Net []Position `json:"net"`
+	Day []Position `json:"day"`
+}
+
+type PositionResponse struct {
+	Status string       `json:"status"`
+	Data   PositionData `json:"data"`
+}
+
+type ProductTypes string
+
+const (
+	ProductTypesIntraday ProductTypes = "INTRADAY"
+	ProductTypesDelivery ProductTypes = "DELIVERY"
+	ProductTypesMTF      ProductTypes = "MTF"
+)
+type QuoteDepth struct {
+	Buy  []QuoteEntry `json:"buy"`
+	Sell []QuoteEntry `json:"sell"`
+}
+
+type QuoteEntry struct {
+	Quantity int     `json:"quantity"`
+	Price    float64 `json:"price"`
+	Orders   int     `json:"orders"`
+}
+
+type QuoteModes string
+
+const (
+	QuoteModesLTP   QuoteModes = "ltp"
+	QuoteModesFULL  QuoteModes = "full"
+	QuoteModesOHLCV QuoteModes = "ohlcv"
+)
+type QuoteResponse struct {
+	Status string                 `json:"status"`
+	Data   map[string]interface{} `json:"data"`
+}
+
+type Resolutions string
+
+const (
+	ResolutionsMin1   Resolutions = "1"
+	ResolutionsMin2   Resolutions = "2"
+	ResolutionsMin3   Resolutions = "3"
+	ResolutionsMin4   Resolutions = "4"
+	ResolutionsMin5   Resolutions = "5"
+	ResolutionsMin10  Resolutions = "10"
+	ResolutionsMin15  Resolutions = "15"
+	ResolutionsMin30  Resolutions = "30"
+	ResolutionsMin45  Resolutions = "45"
+	ResolutionsMin60  Resolutions = "60"
+	ResolutionsMin120 Resolutions = "120"
+	ResolutionsMin180 Resolutions = "180"
+	ResolutionsMin240 Resolutions = "240"
+	ResolutionsDay    Resolutions = "1D"
+	ResolutionsWeek   Resolutions = "1W"
+	ResolutionsMonth  Resolutions = "1M"
+)
+const (
+	Min1   Resolutions = "1"
+	Min2   Resolutions = "2"
+	Min3   Resolutions = "3"
+	Min4   Resolutions = "4"
+	Min5   Resolutions = "5"
+	Min10  Resolutions = "10"
+	Min15  Resolutions = "15"
+	Min30  Resolutions = "30"
+	Min45  Resolutions = "45"
+	Min60  Resolutions = "60"
+	Min120 Resolutions = "120"
+	Min180 Resolutions = "180"
+	Min240 Resolutions = "240"
+	Day1   Resolutions = "day"
+	Week1  Resolutions = "week"
+	Month1 Resolutions = "month"
+)
+type SocketMessage struct {
+	Type string            `json:"type"`
+	Data SocketMessageData `json:"data"`
+}
+
+type SocketMessageData struct {
+	OrderId                    string  `json:"order_id"`
+	OrderNumber                string  `json:"order_number"`
+	AmoOrderId                 string  `json:"amo_order_id"`
+	PlacedBy                   string  `json:"placed_by"`
+	ModifiedBy                 string  `json:"modified_by"`
+	Status                     string  `json:"status"`
+	StatusMessage              string  `json:"status_message"`
+	Symbol                     string  `json:"symbol"`
+	Series                     string  `json:"series"`
+	InstrumentName             string  `json:"instrument_name"`
+	Token                      int     `json:"token"`
+	Exchange                   string  `json:"exchange"`
+	ExpiryDate                 string  `json:"expiry_date"`
+	StrikePrice                float32 `json:"strike_price"`
+	OptionType                 string  `json:"option_type"`
+	TransactionType            string  `json:"transaction_type"`
+	Validity                   string  `json:"validity"`
+	ValidityDays               int     `json:"validity_days"`
+	Product                    string  `json:"product"`
+	Variety                    string  `json:"variety"`
+	DisclosedQuantity          int     `json:"disclosed_quantity"`
+	DisclosedQuantityRemaining int     `json:"disclosed_quantity_remaining"`
+	TotalQuantity              int     `json:"total_quantity"`
+	PendingQuantity            int     `json:"pending_quantity"`
+	TradedQuantity             int     `json:"traded_quantity"`
+	MarketType                 string  `json:"market_type"`
+	OrderPrice                 float32 `json:"order_price"`
+	TriggerPrice               float32 `json:"trigger_price"`
+	TradedPrice                float32 `json:"traded_price"`
+	IsAmo                      bool    `json:"is_amo"`
+	OrderIdentifier            string  `json:"order_identifier"`
+	OrderCreatedAt             string  `json:"order_created_at"`
+	OrderUpdatedAt             string  `json:"order_updated_at"`
+	TradeNumber                string  `json:"trade_number,omitempty"`
+	TradeTime                  string  `json:"trade_time,omitempty"`
+	MarketSegmentId            int     `json:"market_segment_id"`
+	GtdOrderStatus             string  `json:"gtd_order_status"`
+}
+
+type Trade struct {
+	OrderID         string  `json:"order_id"`
+	Exchange        string  `json:"exchange"`
+	Token           int     `json:"token"`
+	TradeNo         string  `json:"trade_no"`
+	ExchangeOrderNo string  `json:"exchange_order_no"`
+	TransactionType string  `json:"transaction_type"`
+	Product         string  `json:"product"`
+	Variety         string  `json:"variety"`
+	TradeQuantity   int     `json:"trade_quantity"`
+	TradePrice      float64 `json:"trade_price"`
+	Symbol          string  `json:"symbol"`
+	Series          string  `json:"series"`
+	InstrumentName  string  `json:"instrument_name"`
+	ExpiryDate      string  `json:"expiry_date"`
+	StrikePrice     float64 `json:"strike_price"`
+	OptionType      string  `json:"option_type"`
+	TradedAt        string  `json:"traded_at"`
+	InitiatedBy     string  `json:"initiated_by"`
+	ModifiedBy      string  `json:"modified_by"`
+	OrderIdentifier string  `json:"order_identifier"`
+}
+
+type TradeBookResponse struct {
+	Status   string  `json:"status"`
+	Trades   []Trade `json:"trades"`
+	Metadata struct {
+		TotalRecords int `json:"total_records"`
+	} `json:"metadata"`
+}
+
+type TransactionTypes string
+
+const (
+	TransactionTypesBUY  TransactionTypes = "BUY"
+	TransactionTypesSELL TransactionTypes = "SELL"
+)
+type UserData struct {
+	AccessToken  string   `json:"access_token"`
+	UserName     string   `json:"user_name"`
+	LoginTime    string   `json:"login_time"`
+	Email        string   `json:"email"`
+	Mobile       string   `json:"mobile"`
+	Exchanges    []string `json:"exchanges"`
+	ProductTypes []string `json:"product_types"`
+	Others       struct {
+		UserCode string `json:"userCode"`
+		POA      int    `json:"POA"`
+	} `json:"others"`
+	UserID        string `json:"user_id"`
+	TradingActive bool   `json:"tradingActive"`
+}
+
+type ValidityTypes string
+
+const (
+	ValidityTypesFullDay           ValidityTypes = "DAY"
+	ValidityTypesImmediateOrCancel ValidityTypes = "IOC"
+	ValidityTypesAfterMarket       ValidityTypes = "AMO"
+)
+type VarietyTypes string
+
+const (
+	VarietyTypesRegularLimitOrder  VarietyTypes = "RL"
+	VarietyTypesRegularMarketOrder VarietyTypes = "RL-MKT"
+	VarietyTypesStopLimitOrder     VarietyTypes = "SL"
+	VarietyTypesStopMarketOrder    VarietyTypes = "SL-MKT"
+)
+type VortexApi struct {
+	// Has unexported fields.
+}
+    VortexApi is a struct representing the Vortex API client
+
+func NewVortexApi(applicationId string, apiKey string) *VortexApi
+
+func (v *VortexApi) CancelOrder(ctx context.Context, exchange ExchangeTypes, orderID string) (OrderResponse, error)
+    CancelOrder cancels an existing order with the Vortex API. It takes a
+    context, an ExchangeTypes value, and an order ID as input. It returns an
+    OrderResponse and an error.
+
+func (v *VortexApi) DownloadMaster(ctx context.Context) ([]map[string]string, error)
+    DownloadMaster retrieves the master data from the Vortex API. It returns a
+    slice of maps representing the CSV records and an error if any.
+
+func (v *VortexApi) Funds(ctx context.Context) (FundsResponse, error)
+    Funds retrieves the funds information from the Vortex API.
+
+func (v *VortexApi) GetLoginUrl() string
+    GetLoginUrl returns the login URL for the Vortex API
+
+func (v *VortexApi) HistoricalCandles(ctx context.Context, exchange ExchangeTypes, token int, from time.Time, to time.Time, resolution Resolutions) (HistoricalResponse, error)
+    HistoricalCandles retrieves historical candlestick data from the Vortex API.
+    It takes a context, an ExchangeTypes value, a token, a start time, an end
+    time, and a resolution as input. It returns a HistoricalResponse and an
+    error.
+
+func (v *VortexApi) Holdings(ctx context.Context) (HoldingsResponse, error)
+    Holdings retrieves the holdings information from the Vortex API. It returns
+    a HoldingsResponse and an error.
+
+func (v *VortexApi) Login(ctx context.Context, clientCode string, password string, totp string) (LoginResponse, error)
+    Login performs the login operation in the Vortex API. It takes a context,
+    client code, password, and TOTP (Time-Based One-Time Password) as input. If
+    the login is successful, the method updates the accessToken field of the
+    VortexApi instance. It returns the LoginResponse and an error.
+
+func (v *VortexApi) ModifyOrder(ctx context.Context, request ModifyOrderRequest, exchange ExchangeTypes, orderID string) (OrderResponse, error)
+    ModifyOrder modifies an existing order with the Vortex API. It takes a
+    context, a ModifyOrderRequest, an ExchangeTypes value, and an order ID as
+    input. The request's Validity field is used to determine the ValidityDays
+    value. It returns an OrderResponse and an error.
+
+func (v *VortexApi) OrderMargin(ctx context.Context, request OrderMarginRequest) (MarginResponse, error)
+    OrderMargin places an order for margin trading in the Vortex API. It takes a
+    context and an OrderMarginRequest as input. It returns a MarginResponse and
+    an error.
+
+func (v *VortexApi) Orders(ctx context.Context, offset int, limit int) (OrderBookResponse, error)
+    Orders retrieves the order book information from the Vortex API. It takes a
+    context, an offset, and a limit as input. It returns an OrderBookResponse
+    and an error.
+
+func (v *VortexApi) PlaceOrder(ctx context.Context, request PlaceOrderRequest) (OrderResponse, error)
+    PlaceOrder places an order with the Vortex API. It takes a context and a
+    PlaceOrderRequest as input. The request's Validity field is used to
+    determine the ValidityDays and IsAMO values. It returns an OrderResponse and
+    an error.
+
+func (v *VortexApi) Positions(ctx context.Context, offset int, limit int) (PositionResponse, error)
+    Positions retrieves the positions information from the Vortex API. It
+    returns a PositionsResponse and an error.
+
+func (v *VortexApi) Quotes(ctx context.Context, instruments []string, mode QuoteModes) (QuoteResponse, error)
+    Quotes retrieves real-time quote information for the specified instruments
+    from the Vortex API. It takes a context, a slice of instrument names, and a
+    quote mode as input. It returns a QuoteResponse and an error.
+
+func (v *VortexApi) SetAccessToken(accessToken string)
+
+func (v *VortexApi) SetHTTPClient(h *http.Client)
+    SetHTTPClient sets the HTTP client for the Vortex API client
+
+func (v *VortexApi) SetLogging(h *http.Client)
+    SetLogging sets the HTTP client with logging enabled
+
+func (v *VortexApi) Trades(ctx context.Context, offset int, limit int) (TradeBookResponse, error)
+    Trades retrieves the trade book information from the Vortex API. It returns
+    a TradeBookResponse and an error.
+
+type Wire struct {
+	Conn *websocket.Conn
+
+	// Has unexported fields.
+}
+
+func NewWire(accessToken string) *Wire
+
+func (t *Wire) Close() error
+
+func (t *Wire) OnClose(f func(code int, reason string))
+
+func (t *Wire) OnConnect(f func())
+
+func (t *Wire) OnError(f func(err error))
+
+func (t *Wire) OnMessage(f func(messageType int, message []byte))
+
+func (t *Wire) OnNoReconnect(f func(attempt int))
+
+func (t *Wire) OnOrderUpdate(f func(order SocketMessage))
+
+func (t *Wire) OnReconnect(f func(attempt int, delay time.Duration))
+
+func (t *Wire) OnTick(f func(*FullQuoteData))
+
+func (t *Wire) Resubscribe()
+
+func (t *Wire) Serve()
+
+func (t *Wire) ServeWithContext(ctx context.Context)
+
+func (t *Wire) SetAccessToken(accessToken string)
+
+func (t *Wire) SetAutoReconnect(val bool)
+
+func (t *Wire) SetConnectTimeout(val time.Duration)
+
+func (t *Wire) SetReconnectMaxDelay(val time.Duration) error
+
+func (t *Wire) SetReconnectMaxRetries(val int)
+
+func (t *Wire) SetRootURL(u url.URL)
+
+func (t *Wire) Stop()
+    Stop the ticker instance and all the goroutines it has spawned.
+
+func (t *Wire) Subscribe(exchange ExchangeTypes, token int, mode QuoteModes)
+
+func (t *Wire) Unsubscribe(exchange ExchangeTypes, token int, mode QuoteModes)
+
