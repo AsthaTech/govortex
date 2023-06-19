@@ -61,7 +61,7 @@ type SocketMessageData struct {
 	GtdOrderStatus             string  `json:"gtd_order_status"`
 }
 
-type Packet struct {
+type packet struct {
 	Exchange          [10]byte `json:"exchange"`
 	Token             int32    `json:"token"`
 	LastTradePrice    float64  `json:"last_trade_price"`
@@ -93,7 +93,7 @@ type Packet struct {
 	DPRLow  int32 `json:"dpr_low,omitempty"`
 }
 
-func (p *Packet) transformToQuote() *FullQuoteData {
+func (p *packet) transformToQuote() *FullQuoteData {
 	q := FullQuoteData{
 		Exchange:          strings.TrimRight(string(p.Exchange[:]), string([]rune{0})),
 		Token:             int(p.Token),
@@ -554,7 +554,7 @@ func parsePacket(buf []byte) (*FullQuoteData, error) {
 		// Pad the slice with zeros
 		buf = append(buf, padding...)
 	}
-	packet := &Packet{}
+	packet := &packet{}
 
 	err := binary.Read(bytes.NewReader(buf), binary.LittleEndian, packet)
 	if err != nil {

@@ -25,6 +25,6 @@ func (v *VortexApi) Login(ctx context.Context, clientCode string, password strin
 	if err != nil {
 		return resp, err
 	}
-	v.accessToken = resp.Data.AccessToken
+	v.AccessToken = resp.Data.AccessToken
 	return resp, nil
 }

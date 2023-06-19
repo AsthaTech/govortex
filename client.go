@@ -41,12 +41,13 @@ const (
 type VortexApi struct {
 	applicationId string
 	apiKey        string
-	accessToken   string
+	AccessToken   string
 	baseURL       string
 	enableLogging bool
 	htt           HTTPClient
 }
 
+// Function to get a new instance of VortexApi Client.
 func NewVortexApi(applicationId string, apiKey string) *VortexApi {
 	v := VortexApi{}
 	v.initialize(applicationId, apiKey)
@@ -73,7 +74,7 @@ func (v *VortexApi) SetHTTPClient(h *http.Client) {
 	v.htt = NewHTTPClient(h, nil, v.enableLogging)
 }
 func (v *VortexApi) SetAccessToken(accessToken string) {
-	v.accessToken = accessToken
+	v.AccessToken = accessToken
 }
 
 // GetLoginUrl returns the login URL for the Vortex API
@@ -88,8 +89,8 @@ func (v *VortexApi) doJson(ctx context.Context, method, uri string, body interfa
 	}
 	headers.Add("User-Agent", name+"/"+version)
 
-	if v.accessToken != "" {
-		headers.Add("Authorization", "Bearer "+v.accessToken)
+	if v.AccessToken != "" {
+		headers.Add("Authorization", "Bearer "+v.AccessToken)
 	}
 	return v.htt.doJSON(ctx, method, v.baseURL+uri, body, params, headers, obj)
 }

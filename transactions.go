@@ -8,7 +8,7 @@ import (
 
 // Positions retrieves the positions information from the Vortex API.
 // It returns a PositionsResponse and an error.
-func (v *VortexApi) Positions(ctx context.Context, offset int, limit int) (PositionResponse, error) {
+func (v *VortexApi) Positions(ctx context.Context) (PositionResponse, error) {
 	var resp PositionResponse
 	_, err := v.doJson(ctx, "GET", URIPositions, nil, nil, nil, &resp)
 	if err != nil {

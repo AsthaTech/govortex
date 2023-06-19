@@ -13,7 +13,7 @@ import (
 // It returns a slice of maps representing the CSV records and an error if any.
 func (v *VortexApi) DownloadMaster(ctx context.Context) ([]map[string]string, error) {
 	endpoint := "/data/instruments"
-	bearerToken := fmt.Sprintf("Bearer %s", v.accessToken)
+	bearerToken := fmt.Sprintf("Bearer %s", v.AccessToken)
 	headers := map[string]string{
 		"Content-Type":  "application/json",
 		"Authorization": bearerToken,

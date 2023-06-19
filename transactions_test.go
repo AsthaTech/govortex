@@ -8,7 +8,7 @@ import (
 func (ts *TestSuite) TestGetPositions(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-	positions, err := ts.VortexApiClient.Positions(ctx, 1, 20)
+	positions, err := ts.VortexApiClient.Positions(ctx)
 	if err != nil {
 		t.Errorf("Error while fetching positions. %v", err)
 	}

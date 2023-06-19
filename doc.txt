@@ -277,38 +277,6 @@ type OrderResponse struct {
 	} `json:"data"`
 }
 
-type Packet struct {
-	Exchange          [10]byte `json:"exchange"`
-	Token             int32    `json:"token"`
-	LastTradePrice    float64  `json:"last_trade_price"`
-	LastTradeTime     int32    `json:"last_trade_time"`
-	OpenPrice         float64  `json:"open_price"`
-	HighPrice         float64  `json:"high_price"`
-	LowPrice          float64  `json:"low_price"`
-	ClosePrice        float64  `json:"close_price"`
-	Volume            int32    `json:"volume"`
-	LastUpdateTime    int32    `json:"last_update_time,omitempty"`
-	LastTradeQuantity int32    `json:"last_trade_quantity,omitempty"`
-	AverageTradePrice float64  `json:"average_trade_price,omitempty"`
-	TotalBuyQuantity  int64    `json:"total_buy_quantity,omitempty"`
-	TotalSellQuantity int64    `json:"total_sell_quantity,omitempty"`
-	OpenInterest      int32    `json:"open_interest,omitempty"`
-	Depth             struct {
-		Buy [5]struct {
-			Price    float64 `json:"price,omitempty"`
-			Quantity int32   `json:"quantity,omitempty"`
-			Orders   int32   `json:"orders,omitempty"`
-		} `json:"buy,omitempty"`
-		Sell [5]struct {
-			Price    float64 `json:"price,omitempty"`
-			Quantity int32   `json:"quantity,omitempty"`
-			Orders   int32   `json:"orders,omitempty"`
-		} `json:"sell,omitempty"`
-	} `json:"depth,omitempty"`
-	DPRHigh int32 `json:"dpr_high,omitempty"`
-	DPRLow  int32 `json:"dpr_low,omitempty"`
-}
-
 type PlaceOrderRequest struct {
 	Exchange          ExchangeTypes    `json:"exchange"`
 	Token             int              `json:"token"`
@@ -539,11 +507,14 @@ const (
 	VarietyTypesStopMarketOrder    VarietyTypes = "SL-MKT"
 )
 type VortexApi struct {
+	AccessToken string
+
 	// Has unexported fields.
 }
     VortexApi is a struct representing the Vortex API client
 
 func NewVortexApi(applicationId string, apiKey string) *VortexApi
+    Function to get a new instance of VortexApi Client.
 
 func (v *VortexApi) CancelOrder(ctx context.Context, exchange ExchangeTypes, orderID string) (OrderResponse, error)
     CancelOrder cancels an existing order with the Vortex API. It takes a
@@ -598,7 +569,7 @@ func (v *VortexApi) PlaceOrder(ctx context.Context, request PlaceOrderRequest) (
     determine the ValidityDays and IsAMO values. It returns an OrderResponse and
     an error.
 
-func (v *VortexApi) Positions(ctx context.Context, offset int, limit int) (PositionResponse, error)
+func (v *VortexApi) Positions(ctx context.Context) (PositionResponse, error)
     Positions retrieves the positions information from the Vortex API. It
     returns a PositionsResponse and an error.
 
@@ -626,47 +597,66 @@ type Wire struct {
 }
 
 func NewWire(accessToken string) *Wire
+    Default method to create a new instance of Wire which can be used to get
+    price updates and order updates
 
 func (t *Wire) Close() error
 
 func (t *Wire) OnClose(f func(code int, reason string))
+    Set a function to receive update whenever the socket closes
 
 func (t *Wire) OnConnect(f func())
+    Set a function to receive update whenever the socket is connected
 
 func (t *Wire) OnError(f func(err error))
+    Set a function to receive update whenever there is an error
 
 func (t *Wire) OnMessage(f func(messageType int, message []byte))
+    Set a function to receive raw message
 
 func (t *Wire) OnNoReconnect(f func(attempt int))
 
 func (t *Wire) OnOrderUpdate(f func(order SocketMessage))
+    Set a function to receive Order Updates
+
+func (t *Wire) OnPriceUpdate(f func(*FullQuoteData))
+    Set a function to receive Price Updates
 
 func (t *Wire) OnReconnect(f func(attempt int, delay time.Duration))
-
-func (t *Wire) OnTick(f func(*FullQuoteData))
+    Set a function to receive update whenever the socket reconnects
 
 func (t *Wire) Resubscribe()
 
 func (t *Wire) Serve()
+    Call this function to start the websocket server
 
 func (t *Wire) ServeWithContext(ctx context.Context)
+    Call this function to start the websocket server with a context
 
 func (t *Wire) SetAccessToken(accessToken string)
+    Use this function to change access token
 
 func (t *Wire) SetAutoReconnect(val bool)
+    Use this function to change auto reconnection setting. Default: true
 
 func (t *Wire) SetConnectTimeout(val time.Duration)
+    Use this function to change connection timeout value. Dafault: 7 seconds
 
 func (t *Wire) SetReconnectMaxDelay(val time.Duration) error
+    Use this function to change max reconnection delay. Default: 60 seconds
 
 func (t *Wire) SetReconnectMaxRetries(val int)
+    Use this function to change max connection retries. Default: 300
 
 func (t *Wire) SetRootURL(u url.URL)
+    Use this function to set new url for websocket connection
 
 func (t *Wire) Stop()
-    Stop the ticker instance and all the goroutines it has spawned.
+    Stop the wire instance and all the goroutines it has spawned.
 
 func (t *Wire) Subscribe(exchange ExchangeTypes, token int, mode QuoteModes)
+    Call this function to subscribe to an instrument
 
 func (t *Wire) Unsubscribe(exchange ExchangeTypes, token int, mode QuoteModes)
+    Call this function to unsubscribe an instrument
 
