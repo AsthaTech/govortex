@@ -28,8 +28,9 @@ const (
 	URIOrderHistory string = "/orders/%s"       //"/orders/{order_id}"
 	URITrades       string = "/trades"
 
-	URIPositions string = "/portfolio/positions"
-	URIHoldings  string = "/portfolio/holdings"
+	URIPositions       string = "/portfolio/positions"
+	URIConvertposition string = "/portfolio/positions"
+	URIHoldings        string = "/portfolio/holdings"
 
 	URIFunds       string = "/user/funds"
 	URIOrderMargin string = "/margins/order"

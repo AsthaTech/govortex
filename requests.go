@@ -38,3 +38,11 @@ type OrderMarginRequest struct {
 	OldQuantity     int              `json:"old_quantity"`
 	Mode            MarginModes      `json:"mode"`
 }
+
+type ConvertPositionObject struct {
+	Exchange        ExchangeTypes    `json:"exchange"`
+	Token           int              `json:"token"`
+	TransactionType TransactionTypes `json:"transaction_type"`
+	OldProductType  ProductTypes     `json:"old_product_type"`
+	NewProductType  ProductTypes     `json:"new_product_type"`
+}

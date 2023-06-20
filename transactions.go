@@ -17,6 +17,15 @@ func (v *VortexApi) Positions(ctx context.Context) (PositionResponse, error) {
 	return resp, nil
 }
 
+func (v *VortexApi) ConvertPosition(ctx context.Context, req ConvertPositionObject) (ConvertPositionResponse, error) {
+	var resp ConvertPositionResponse
+	_, err := v.doJson(ctx, "PUT", URIConvertposition, req, nil, nil, &resp)
+	if err != nil {
+		return resp, err
+	}
+	return resp, nil
+}
+
 // Holdings retrieves the holdings information from the Vortex API.
 // It returns a HoldingsResponse and an error.
 func (v *VortexApi) Holdings(ctx context.Context) (HoldingsResponse, error) {

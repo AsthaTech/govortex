@@ -109,6 +109,12 @@ type PositionResponse struct {
 	Data   PositionData `json:"data"`
 }
 
+type ConvertPositionResponse struct {
+	Status  string `json:"status"`
+	Code    string `json:"code"`
+	Message string `json:"message"`
+}
+
 type PositionData struct {
 	Net []Position `json:"net"`
 	Day []Position `json:"day"`

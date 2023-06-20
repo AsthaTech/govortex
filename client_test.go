@@ -48,6 +48,7 @@ var MockResponders = [][]interface{}{
 
 	// PUT REQUESTS
 	{http.MethodPut, fmt.Sprintf(URIModifyOrder, "regular", ExchangeTypesNSEEQUITY, "NXAAE00002K3"), url.Values{}, "order.json"},
+	{http.MethodPut, URIConvertposition, url.Values{}, "position_conversion.json"},
 }
 
 const suiteTestMethodPrefix = "Test"
