@@ -40,6 +40,13 @@ FUNCTIONS
 func GetErrorName(code int) string
     GetErrorName returns an error name given an HTTP code.
 
+func InitializeVortexApi(applicationId string, apiKey string, apiClient *VortexApi) error
+    Function to get a new instance of VortexApi Client.
+
+func InitializeWire(accessToken string, wire *Wire) error
+    Default method to create a new instance of Wire which can be used to get
+    price updates and order updates
+
 func NewError(etype string, message string, data interface{}) error
     NewError creates and returns a new instace of Error with custom error
     metadata.
@@ -513,9 +520,6 @@ type VortexApi struct {
 }
     VortexApi is a struct representing the Vortex API client
 
-func NewVortexApi(applicationId string, apiKey string) *VortexApi
-    Function to get a new instance of VortexApi Client.
-
 func (v *VortexApi) CancelOrder(ctx context.Context, exchange ExchangeTypes, orderID string) (OrderResponse, error)
     CancelOrder cancels an existing order with the Vortex API. It takes a
     context, an ExchangeTypes value, and an order ID as input. It returns an
@@ -595,10 +599,6 @@ type Wire struct {
 
 	// Has unexported fields.
 }
-
-func NewWire(accessToken string) *Wire
-    Default method to create a new instance of Wire which can be used to get
-    price updates and order updates
 
 func (t *Wire) Close() error
 

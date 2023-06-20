@@ -14,13 +14,15 @@ import (
 	httpmock "github.com/jarcoal/httpmock"
 )
 
+const (
+	apiKey        = "testApiKey"
+	applicationId = "testApplicationId"
+)
+
 func TestNewClient(t *testing.T) {
 	t.Parallel()
-
-	apiKey := "testApiKey"
-	applicationId := "testApplicationId"
-
-	vortexApi := NewVortexApi(applicationId, apiKey)
+	var vortexApi VortexApi
+	InitializeVortexApi(applicationId, apiKey, &vortexApi)
 	if vortexApi.apiKey != apiKey {
 		t.Errorf("Api Key is not assigned properly.")
 	}
@@ -56,7 +58,9 @@ type TestSuite struct {
 
 func (ts *TestSuite) SetupAPITestSuit(t *testing.T) {
 
-	ts.VortexApiClient = NewVortexApi("testApplicationId", "testApiSecret")
+	var vortexApi VortexApi
+	InitializeVortexApi(applicationId, apiKey, &vortexApi)
+	ts.VortexApiClient = &vortexApi
 	httpmock.ActivateNonDefault(ts.VortexApiClient.htt.GetClient().client)
 
 	for _, v := range MockResponders {

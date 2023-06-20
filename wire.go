@@ -212,17 +212,15 @@ var (
 )
 
 //Default method to create a new instance of Wire which can be used to get price updates and order updates
-func NewWire(accessToken string) *Wire {
-	wire := Wire{
-		accessToken:         accessToken,
-		url:                 websocketUrl,
-		autoreconnect:       true,
-		reconnectMaxDelay:   defaultReconnectMaxDelay,
-		reconnectMaxRetries: defaultReconnectMaxAttempts,
-		connectTimeout:      defaultConnectTimeout,
-		subscriptions:       map[ExchangeTypes]map[int]QuoteModes{},
-	}
-	return &wire
+func InitializeWire(accessToken string, wire *Wire) error {
+	wire.accessToken = accessToken
+	wire.url = websocketUrl
+	wire.autoreconnect = true
+	wire.reconnectMaxDelay = defaultReconnectMaxDelay
+	wire.reconnectMaxRetries = defaultReconnectMaxAttempts
+	wire.connectTimeout = defaultConnectTimeout
+	wire.subscriptions = map[ExchangeTypes]map[int]QuoteModes{}
+	return nil
 }
 
 // Use this function to set new url for websocket connection

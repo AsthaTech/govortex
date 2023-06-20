@@ -35,7 +35,8 @@ const (
 )
 
 func main() {
-	client := govortex.NewVortexApi(applicationId, apiKey)
+	var client govortex.VortexApi
+	govortex.InitializeVortexApi(applicationId, apiKey, &client)
 	ctx := context.Background()
 	client.Login(ctx, "clientCode", "password", "totp")
 	// Access token is automatically set upon successful login call
@@ -85,13 +86,15 @@ const (
 )
 
 func main() {
-	client := govortex.NewVortexApi(applicationId, apiKey)
+	var client govortex.VortexApi
+	govortex.InitializeVortexApi(applicationId, apiKey, &client)
 	ctx := context.Background()
 	client.Login(ctx, "clientCode", "password", "totp")
 	accessToken := client.AccessToken
 
 	// Initialize the wire client
-	wire = govortex.NewWire(accessToken)
+	var wire govortex.Wire
+	govortex.InitializeWire(accessToken, &wire)
 
 	// Define callbacks
 	wire.OnConnect(onConnect)

@@ -48,10 +48,9 @@ type VortexApi struct {
 }
 
 // Function to get a new instance of VortexApi Client.
-func NewVortexApi(applicationId string, apiKey string) *VortexApi {
-	v := VortexApi{}
-	v.initialize(applicationId, apiKey)
-	return &v
+func InitializeVortexApi(applicationId string, apiKey string, apiClient *VortexApi) error {
+	apiClient.initialize(applicationId, apiKey)
+	return nil
 }
 
 // Initialize sets the application ID and API key for the Vortex API client
