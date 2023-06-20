@@ -24,8 +24,8 @@ func main() {
 	accessToken := client.AccessToken
 
 	// Initialize the wire client
-	var wire govortex.Wire
-	govortex.InitializeWire(accessToken, &wire)
+	wire = &govortex.Wire{}
+	govortex.InitializeWire(accessToken, wire)
 
 	// Define callbacks
 	wire.OnConnect(onConnect)
