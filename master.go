@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 )
 
 // DownloadMaster retrieves the master data from the Vortex API.
@@ -14,20 +13,16 @@ import (
 func (v *VortexApi) DownloadMaster(ctx context.Context) ([]map[string]string, error) {
 	endpoint := "/data/instruments"
 	bearerToken := fmt.Sprintf("Bearer %s", v.AccessToken)
-	headers := map[string]string{
-		"Content-Type":  "application/json",
-		"Authorization": bearerToken,
-	}
+	headers := make(http.Header, 0)
+	headers.Add("Content-Type", "application/json")
+	headers.Add("Authorization", bearerToken)
 	endpointUrl := v.baseURL + endpoint
-	queryParams := url.Values{}
-	for key, value := range headers {
-		queryParams.Add(key, fmt.Sprintf("%v", value))
-	}
+
 	req, err := http.NewRequestWithContext(ctx, "GET", endpointUrl, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
-	req.URL.RawQuery = queryParams.Encode()
+	req.Header = headers
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -40,7 +35,7 @@ func (v *VortexApi) DownloadMaster(ctx context.Context) ([]map[string]string, er
 
 	results := make([]map[string]string, 0)
 	columns := make([]string, 0)
-
+	reader.LazyQuotes = true
 	for {
 		record, err := reader.Read()
 		if err == io.EOF {
@@ -49,8 +44,7 @@ func (v *VortexApi) DownloadMaster(ctx context.Context) ([]map[string]string, er
 		if err != nil {
 			return nil, fmt.Errorf("failed to read CSV record: %v", err)
 		}
-
-		if columns == nil {
+		if len(columns) == 0 {
 			columns = record
 		} else {
 			row := make(map[string]string)
