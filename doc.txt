@@ -13,8 +13,9 @@ const (
 	URIOrderHistory string = "/orders/%s"       //"/orders/{order_id}"
 	URITrades       string = "/trades"
 
-	URIPositions string = "/portfolio/positions"
-	URIHoldings  string = "/portfolio/holdings"
+	URIPositions       string = "/portfolio/positions"
+	URIConvertposition string = "/portfolio/positions"
+	URIHoldings        string = "/portfolio/holdings"
 
 	URIFunds       string = "/user/funds"
 	URIOrderMargin string = "/margins/order"
@@ -53,6 +54,20 @@ func NewError(etype string, message string, data interface{}) error
 
 
 TYPES
+
+type ConvertPositionObject struct {
+	Exchange        ExchangeTypes    `json:"exchange"`
+	Token           int              `json:"token"`
+	TransactionType TransactionTypes `json:"transaction_type"`
+	OldProductType  ProductTypes     `json:"old_product_type"`
+	NewProductType  ProductTypes     `json:"new_product_type"`
+}
+
+type ConvertPositionResponse struct {
+	Status  string `json:"status"`
+	Code    string `json:"code"`
+	Message string `json:"message"`
+}
 
 type Error struct {
 	Code      int
@@ -194,6 +209,10 @@ type MarketDepthResponse struct {
 	Data   QuoteDepth `json:"data"`
 }
 
+type Metadata struct {
+	TotalRecords int `json:"total_records"`
+}
+
 type ModifyOrderRequest struct {
 	Variety           VarietyTypes  `json:"variety"`
 	Quantity          int           `json:"quantity"`
@@ -260,6 +279,46 @@ type OrderBookResponse struct {
 		CompletedRecords int `json:"completed_records"`
 		OpenRecords      int `json:"open_records"`
 	} `json:"metadata"`
+}
+
+type OrderHistory struct {
+	OrderID                string    `json:"order_id"`
+	Exchange               string    `json:"exchange"`
+	Token                  int       `json:"token"`
+	OrderNumber            string    `json:"order_number"`
+	Status                 string    `json:"status"`
+	ErrorReason            string    `json:"error_reason"`
+	TransactionType        string    `json:"transaction_type"`
+	Product                string    `json:"product"`
+	Variety                string    `json:"variety"`
+	TotalQuantity          int       `json:"total_quantity"`
+	PendingQuantity        int       `json:"pending_quantity"`
+	TradedQuantity         int       `json:"traded_quantity"`
+	DisclosedQuantity      int       `json:"disclosed_quantity"`
+	OrderPrice             float64   `json:"order_price"`
+	TriggerPrice           float64   `json:"trigger_price"`
+	Validity               string    `json:"validity"`
+	ValidityDays           int       `json:"validity_days"`
+	Symbol                 string    `json:"symbol"`
+	Series                 string    `json:"series"`
+	InstrumentName         string    `json:"instrument_name"`
+	ExpiryDate             string    `json:"expiry_date"`
+	StrikePrice            float64   `json:"strike_price"`
+	OptionType             string    `json:"option_type"`
+	OrderCreatedAt         time.Time `json:"order_created_at"`
+	ExchangeOrderCreatedAt time.Time `json:"exchange_order_created_at"`
+	InitiatedBy            string    `json:"initiated_by"`
+	ModifiedBy             string    `json:"modified_by"`
+	IsAMO                  bool      `json:"is_amo"`
+	OrderIdentifier        string    `json:"order_identifier"`
+}
+
+type OrderHistoryResponse struct {
+	Status   string         `json:"status"`
+	Code     string         `json:"code"`
+	Message  string         `json:"message"`
+	Data     []OrderHistory `json:"data"`
+	Metadata Metadata       `json:"metadata"`
 }
 
 type OrderMarginRequest struct {
@@ -520,64 +579,68 @@ type VortexApi struct {
 }
     VortexApi is a struct representing the Vortex API client
 
-func (v *VortexApi) CancelOrder(ctx context.Context, exchange ExchangeTypes, orderID string) (OrderResponse, error)
+func (v *VortexApi) CancelOrder(ctx context.Context, exchange ExchangeTypes, orderID string) (*OrderResponse, error)
     CancelOrder cancels an existing order with the Vortex API. It takes a
     context, an ExchangeTypes value, and an order ID as input. It returns an
     OrderResponse and an error.
+
+func (v *VortexApi) ConvertPosition(ctx context.Context, req ConvertPositionObject) (*ConvertPositionResponse, error)
 
 func (v *VortexApi) DownloadMaster(ctx context.Context) ([]map[string]string, error)
     DownloadMaster retrieves the master data from the Vortex API. It returns a
     slice of maps representing the CSV records and an error if any.
 
-func (v *VortexApi) Funds(ctx context.Context) (FundsResponse, error)
+func (v *VortexApi) Funds(ctx context.Context) (*FundsResponse, error)
     Funds retrieves the funds information from the Vortex API.
 
 func (v *VortexApi) GetLoginUrl() string
     GetLoginUrl returns the login URL for the Vortex API
 
-func (v *VortexApi) HistoricalCandles(ctx context.Context, exchange ExchangeTypes, token int, from time.Time, to time.Time, resolution Resolutions) (HistoricalResponse, error)
+func (v *VortexApi) HistoricalCandles(ctx context.Context, exchange ExchangeTypes, token int, from time.Time, to time.Time, resolution Resolutions) (*HistoricalResponse, error)
     HistoricalCandles retrieves historical candlestick data from the Vortex API.
     It takes a context, an ExchangeTypes value, a token, a start time, an end
     time, and a resolution as input. It returns a HistoricalResponse and an
     error.
 
-func (v *VortexApi) Holdings(ctx context.Context) (HoldingsResponse, error)
+func (v *VortexApi) Holdings(ctx context.Context) (*HoldingsResponse, error)
     Holdings retrieves the holdings information from the Vortex API. It returns
     a HoldingsResponse and an error.
 
-func (v *VortexApi) Login(ctx context.Context, clientCode string, password string, totp string) (LoginResponse, error)
+func (v *VortexApi) Login(ctx context.Context, clientCode string, password string, totp string) (*LoginResponse, error)
     Login performs the login operation in the Vortex API. It takes a context,
     client code, password, and TOTP (Time-Based One-Time Password) as input. If
     the login is successful, the method updates the accessToken field of the
     VortexApi instance. It returns the LoginResponse and an error.
 
-func (v *VortexApi) ModifyOrder(ctx context.Context, request ModifyOrderRequest, exchange ExchangeTypes, orderID string) (OrderResponse, error)
+func (v *VortexApi) ModifyOrder(ctx context.Context, request ModifyOrderRequest, exchange ExchangeTypes, orderID string) (*OrderResponse, error)
     ModifyOrder modifies an existing order with the Vortex API. It takes a
     context, a ModifyOrderRequest, an ExchangeTypes value, and an order ID as
     input. The request's Validity field is used to determine the ValidityDays
     value. It returns an OrderResponse and an error.
 
-func (v *VortexApi) OrderMargin(ctx context.Context, request OrderMarginRequest) (MarginResponse, error)
+func (v *VortexApi) OrderHistory(ctx context.Context, orderId string) (*OrderHistoryResponse, error)
+
+func (v *VortexApi) OrderMargin(ctx context.Context, request *OrderMarginRequest) (*MarginResponse, error)
     OrderMargin places an order for margin trading in the Vortex API. It takes a
     context and an OrderMarginRequest as input. It returns a MarginResponse and
     an error.
 
-func (v *VortexApi) Orders(ctx context.Context, offset int, limit int) (OrderBookResponse, error)
+func (v *VortexApi) Orders(ctx context.Context, offset int, limit int) (*OrderBookResponse, error)
     Orders retrieves the order book information from the Vortex API. It takes a
     context, an offset, and a limit as input. It returns an OrderBookResponse
     and an error.
 
-func (v *VortexApi) PlaceOrder(ctx context.Context, request PlaceOrderRequest) (OrderResponse, error)
+func (v *VortexApi) PlaceOrder(ctx context.Context, request PlaceOrderRequest) (*OrderResponse, error)
     PlaceOrder places an order with the Vortex API. It takes a context and a
     PlaceOrderRequest as input. The request's Validity field is used to
     determine the ValidityDays and IsAMO values. It returns an OrderResponse and
     an error.
 
-func (v *VortexApi) Positions(ctx context.Context) (PositionResponse, error)
+func (v *VortexApi) Positions(ctx context.Context) (*PositionResponse, error)
     Positions retrieves the positions information from the Vortex API. It
     returns a PositionsResponse and an error.
 
-func (v *VortexApi) Quotes(ctx context.Context, instruments []string, mode QuoteModes) (QuoteResponse, error)
+func (v *VortexApi) Quotes(ctx context.Context, instruments []string, mode QuoteModes) (*QuoteResponse, error)
     Quotes retrieves real-time quote information for the specified instruments
     from the Vortex API. It takes a context, a slice of instrument names, and a
     quote mode as input. It returns a QuoteResponse and an error.
@@ -590,7 +653,7 @@ func (v *VortexApi) SetHTTPClient(h *http.Client)
 func (v *VortexApi) SetLogging(h *http.Client)
     SetLogging sets the HTTP client with logging enabled
 
-func (v *VortexApi) Trades(ctx context.Context, offset int, limit int) (TradeBookResponse, error)
+func (v *VortexApi) Trades(ctx context.Context, offset int, limit int) (*TradeBookResponse, error)
     Trades retrieves the trade book information from the Vortex API. It returns
     a TradeBookResponse and an error.
 

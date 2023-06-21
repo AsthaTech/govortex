@@ -58,3 +58,16 @@ func (ts *TestSuite) TestOrderBook(t *testing.T) {
 		t.Errorf("Errorwhile fetching order book. %s", "order book is empty")
 	}
 }
+
+func (ts *TestSuite) TestOrderHistory(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	resp, err := ts.VortexApiClient.OrderHistory(ctx, "test")
+	if err != nil {
+		t.Errorf("Error while fetching order history. %v", err)
+		return
+	}
+	if len(resp.Data) == 0 {
+		t.Errorf("Error while fetching order history. %s", "order history is empty")
+	}
+}

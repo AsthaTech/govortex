@@ -40,7 +40,7 @@ var MockResponders = [][]interface{}{
 	{http.MethodGet, URIQuotes, url.Values{"q": []string{"NSE_EQ-22"}, "mode": []string{string(QuoteModesFULL)}}, "quotes.json"},
 	{http.MethodGet, URITrades, url.Values{"limit": []string{"20"}, "offset": []string{"1"}}, "trades.json"},
 	{http.MethodGet, URIHistory, url.Values{"exchange": []string{string(ExchangeTypesNSEEQUITY)}, "token": []string{"22"}, "from": []string{"1494505756"}, "to": []string{"1494505756"}, "resolution": []string{string(ResolutionsMin1)}}, "history.json"},
-
+	{http.MethodGet, fmt.Sprintf(URIOrderHistory, "test"), url.Values{}, "order_history.json"},
 	// DELETE REQUESTS
 	{http.MethodDelete, fmt.Sprintf(URIDeleterOrder, "regular", ExchangeTypesNSEEQUITY, "NXAAE00002K3"), url.Values{}, "order.json"},
 	// POST  REQUESTS

@@ -9,7 +9,7 @@ import (
 // It takes a context, client code, password, and TOTP (Time-Based One-Time Password) as input.
 // If the login is successful, the method updates the accessToken field of the VortexApi instance.
 // It returns the LoginResponse and an error.
-func (v *VortexApi) Login(ctx context.Context, clientCode string, password string, totp string) (LoginResponse, error) {
+func (v *VortexApi) Login(ctx context.Context, clientCode string, password string, totp string) (*LoginResponse, error) {
 	data := map[string]string{
 		"client_code":    clientCode,
 		"password":       password,
@@ -23,8 +23,8 @@ func (v *VortexApi) Login(ctx context.Context, clientCode string, password strin
 	header.Add("x-api-key", v.apiKey)
 	_, err := v.doJson(ctx, "POST", URILogin, data, nil, header, &resp)
 	if err != nil {
-		return resp, err
+		return nil, err
 	}
 	v.AccessToken = resp.Data.AccessToken
-	return resp, nil
+	return &resp, nil
 }

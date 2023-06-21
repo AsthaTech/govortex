@@ -360,3 +360,47 @@ type MarketDepthResponse struct {
 	Status string     `json:"status"`
 	Data   QuoteDepth `json:"data"`
 }
+
+type OrderHistoryResponse struct {
+	Status   string         `json:"status"`
+	Code     string         `json:"code"`
+	Message  string         `json:"message"`
+	Data     []OrderHistory `json:"data"`
+	Metadata Metadata       `json:"metadata"`
+}
+
+type OrderHistory struct {
+	OrderID                string  `json:"order_id"`
+	Exchange               string  `json:"exchange"`
+	Token                  int     `json:"token"`
+	OrderNumber            string  `json:"order_number"`
+	Status                 string  `json:"status"`
+	ErrorReason            string  `json:"error_reason"`
+	TransactionType        string  `json:"transaction_type"`
+	Product                string  `json:"product"`
+	Variety                string  `json:"variety"`
+	TotalQuantity          int     `json:"total_quantity"`
+	PendingQuantity        int     `json:"pending_quantity"`
+	TradedQuantity         int     `json:"traded_quantity"`
+	DisclosedQuantity      int     `json:"disclosed_quantity"`
+	OrderPrice             float64 `json:"order_price"`
+	TriggerPrice           float64 `json:"trigger_price"`
+	Validity               string  `json:"validity"`
+	ValidityDays           int     `json:"validity_days"`
+	Symbol                 string  `json:"symbol"`
+	Series                 string  `json:"series"`
+	InstrumentName         string  `json:"instrument_name"`
+	ExpiryDate             string  `json:"expiry_date"`
+	StrikePrice            float64 `json:"strike_price"`
+	OptionType             string  `json:"option_type"`
+	OrderCreatedAt         string  `json:"order_created_at"`
+	ExchangeOrderCreatedAt string  `json:"exchange_order_created_at"`
+	InitiatedBy            string  `json:"initiated_by"`
+	ModifiedBy             string  `json:"modified_by"`
+	IsAMO                  bool    `json:"is_amo"`
+	OrderIdentifier        string  `json:"order_identifier"`
+}
+
+type Metadata struct {
+	TotalRecords int `json:"total_records"`
+}
