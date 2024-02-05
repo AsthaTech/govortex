@@ -86,7 +86,10 @@ func (h *httpClient) doRaw(ctx context.Context, method, rURL string, reqBody int
 
 	req, err := http.NewRequestWithContext(ctx, method, rURL, postBody)
 	if err != nil {
-		h.hLog.Printf("Request preparation failed: %v", err)
+		if h.debug {
+			h.hLog.Printf("Request preparation failed: %v", err)
+		}
+
 		return resp, NewError(NetworkError, "Request preparation failed.", nil)
 	}
 
@@ -108,7 +111,10 @@ func (h *httpClient) doRaw(ctx context.Context, method, rURL string, reqBody int
 
 	r, err := h.client.Do(req)
 	if err != nil {
-		h.hLog.Printf("Request failed: %v", err)
+		if h.debug {
+			h.hLog.Printf("Request failed: %v", err)
+		}
+
 		return resp, NewError(NetworkError, "Request failed.", nil)
 	}
 
@@ -116,7 +122,10 @@ func (h *httpClient) doRaw(ctx context.Context, method, rURL string, reqBody int
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		h.hLog.Printf("Unable to read response: %v", err)
+		if h.debug {
+			h.hLog.Printf("Unable to read response: %v", err)
+		}
+
 		return resp, NewError(DataError, "Error reading response.", nil)
 	}
 
@@ -145,9 +154,14 @@ func (h *httpClient) doJSON(ctx context.Context, method, rURL string, reqBody in
 
 	// We now unmarshal the body.
 	if err := json.Unmarshal(resp.Body, obj); err != nil {
-		h.hLog.Printf(string(resp.Body))
-		h.hLog.Printf("Error parsing JSON response: %v | %s", err, resp.Body)
+		if h.debug {
+			h.hLog.Printf(string(resp.Body))
+			h.hLog.Printf("Error parsing JSON response: %v | %s", err, resp.Body)
+		}
 		return resp, NewError(DataError, "Error parsing response.", nil)
+	}
+	if h.debug {
+		h.hLog.Printf(string(resp.Body))
 	}
 
 	return resp, nil

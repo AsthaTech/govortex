@@ -20,7 +20,7 @@ func (ts *TestSuite) TestGetPositions(t *testing.T) {
 func (ts *TestSuite) TestConvertPosition(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-	_, err := ts.VortexApiClient.ConvertPosition(ctx, ConvertPositionObject{
+	_, err := ts.VortexApiClient.ConvertPosition(ctx, ConvertPositionRequest{
 		Exchange:        ExchangeTypesNSEEQUITY,
 		Token:           22,
 		TransactionType: TransactionTypesBUY,

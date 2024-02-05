@@ -36,7 +36,7 @@ func (ts *TestSuite) TestModifyOrder(t *testing.T) {
 func (ts *TestSuite) TestCancelOrder(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-	resp, err := ts.VortexApiClient.CancelOrder(ctx, ExchangeTypesNSEEQUITY, "NXAAE00002K3")
+	resp, err := ts.VortexApiClient.CancelOrder(ctx, "NXAAE00002K3")
 	if err != nil {
 		t.Errorf("Error while cancelling order. %v", err)
 		return
@@ -49,7 +49,7 @@ func (ts *TestSuite) TestCancelOrder(t *testing.T) {
 func (ts *TestSuite) TestOrderBook(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-	resp, err := ts.VortexApiClient.Orders(ctx, 1, 20)
+	resp, err := ts.VortexApiClient.Orders(ctx)
 	if err != nil {
 		t.Errorf("Error while fetching order book. %v", err)
 		return

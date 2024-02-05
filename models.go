@@ -1,5 +1,12 @@
 package govortex
 
+import (
+	"time"
+
+	"github.com/gofrs/uuid"
+	"github.com/lib/pq"
+)
+
 type FullQuoteData struct {
 	Exchange          string      `json:"exchange"`
 	Token             int         `json:"token"`
@@ -80,51 +87,55 @@ type FundDetails struct {
 	NetAvailable        float64 `json:"net_available"`
 }
 
-type Holding struct {
-	ISIN               string          `json:"isin"`
-	NSE                ExchangeDetails `json:"nse"`
-	BSE                ExchangeDetails `json:"bse"`
-	TotalFree          int             `json:"total_free"`
-	DPFree             int             `json:"dp_free"`
-	PoolFree           int             `json:"pool_free"`
-	T1Quantity         int             `json:"t1_quantity"`
-	AveragePrice       float64         `json:"average_price"`
-	CollateralQuantity int             `json:"collateral_quantity"`
-	CollateralValue    float64         `json:"collateral_value"`
-}
-
 type ExchangeDetails struct {
 	Token    int    `json:"token"`
 	Exchange string `json:"exchange"`
 	Symbol   string `json:"symbol"`
 }
 
+type ExchangeDetail struct {
+	Token    int           `json:"token"`
+	Exchange ExchangeTypes `json:"exchange"`
+	Symbol   string        `json:"symbol"`
+}
+
+type Holding struct {
+	ISIN               string          `json:"isin"`
+	NSE                *ExchangeDetail `json:"nse,omitempty"`
+	BSE                *ExchangeDetail `json:"bse,omitempty"`
+	TotalFree          int             `json:"total_free"`
+	DPFree             int             `json:"dp_free"`
+	PoolFree           int             `json:"pool_free"`
+	T1Quantity         int             `json:"t1_quantity"`
+	AveragePrice       float64         `json:"average_price"`
+	LastPrice          float64         `json:"last_price"`
+	Product            string          `json:"product"`
+	CollateralQuantity int             `json:"collateral_quantity"`
+	CollateralValue    float64         `json:"collateral_value"`
+}
+
 type HoldingsResponse struct {
-	Status string    `json:"status"`
-	Data   []Holding `json:"data"`
+	Status  string    `json:"status"`
+	Message string    `json:"message,omitempty"`
+	Data    []Holding `json:"data"`
 }
 
 type PositionResponse struct {
-	Status string       `json:"status"`
-	Data   PositionData `json:"data"`
+	Status string          `json:"status"`
+	Data   NetDayPositions `json:"data"`
 }
 
-type ConvertPositionResponse struct {
-	Status  string `json:"status"`
-	Code    string `json:"code"`
-	Message string `json:"message"`
+type NetDayPositions struct {
+	Net []PositionItem `json:"net"`
+	Day []PositionItem `json:"day"`
 }
 
-type PositionData struct {
-	Net []Position `json:"net"`
-	Day []Position `json:"day"`
-}
-
-type Position struct {
+type PositionItem struct {
 	Exchange              ExchangeTypes `json:"exchange"`
 	Symbol                string        `json:"symbol"`
 	ExpiryDate            string        `json:"expiry_date"`
-	OptionType            string        `json:"option_type"`
+	OptionType            OptionType    `json:"option_type"`
+	StrikePrice           float64       `json:"strike_price"`
 	Token                 int           `json:"token"`
 	Product               ProductTypes  `json:"product"`
 	Quantity              int           `json:"quantity"`
@@ -141,6 +152,12 @@ type Position struct {
 	SellQuantity          int           `json:"sell_quantity"`
 	BuyPrice              float64       `json:"buy_price"`
 	SellPrice             float64       `json:"sell_price"`
+}
+
+type ConvertPositionResponse struct {
+	Status  string `json:"status"`
+	Code    string `json:"code"`
+	Message string `json:"message"`
 }
 
 type TradeBookResponse struct {
@@ -228,49 +245,58 @@ const (
 	ValidityTypesAfterMarket       ValidityTypes = "AMO"
 )
 
-type Order struct {
-	OrderID                    string           `json:"order_id"`
-	Exchange                   ExchangeTypes    `json:"exchange"`
-	Token                      int              `json:"token"`
-	OrderNumber                string           `json:"order_number"`
-	Status                     string           `json:"status"`
-	ErrorReason                string           `json:"error_reason"`
-	TransactionType            TransactionTypes `json:"transaction_type"`
-	Product                    ProductTypes     `json:"product"`
-	Variety                    VarietyTypes     `json:"variety"`
-	TotalQuantity              int              `json:"total_quantity"`
-	PendingQuantity            int              `json:"pending_quantity"`
-	TradedQuantity             int              `json:"traded_quantity"`
-	DisclosedQuantity          int              `json:"disclosed_quantity"`
-	DisclosedQuantityRemaining int              `json:"disclosed_quantity_remaining"`
-	OrderPrice                 float64          `json:"order_price"`
-	TriggerPrice               float64          `json:"trigger_price"`
-	TradedPrice                float64          `json:"traded_price"`
-	Validity                   ValidityTypes    `json:"validity"`
-	ValidityDays               int              `json:"validity_days"`
-	Symbol                     string           `json:"symbol"`
-	Series                     string           `json:"series"`
-	InstrumentName             string           `json:"instrument_name"`
-	ExpiryDate                 string           `json:"expiry_date"`
-	StrikePrice                float64          `json:"strike_price"`
-	OptionType                 string           `json:"option_type"`
-	LotSize                    int              `json:"lot_size"`
-	OrderCreatedAt             string           `json:"order_created_at"`
-	InitiatedBy                string           `json:"initiated_by"`
-	ModifiedBy                 string           `json:"modified_by"`
-	IsAMO                      bool             `json:"is_amo"`
-	OrderIdentifier            string           `json:"order_identifier"`
+type OrderBookResponse struct {
+	Status   string   `json:"status"`
+	Orders   []Order  `json:"orders"`
+	Metadata Metadata `json:"metadata"`
 }
 
-type OrderBookResponse struct {
-	Status   string  `json:"status"`
-	Orders   []Order `json:"orders"`
-	Metadata struct {
-		TotalRecords     int `json:"total_records"`
-		AllRecords       int `json:"all_records"`
-		CompletedRecords int `json:"completed_records"`
-		OpenRecords      int `json:"open_records"`
-	} `json:"metadata"`
+type Order struct {
+	OrderID                    string                `json:"order_id"`
+	Exchange                   ExchangeTypes         `json:"exchange"`
+	Token                      int                   `json:"token"`
+	OrderNumber                string                `json:"order_number"`
+	Status                     string                `json:"status"`
+	ErrorReason                string                `json:"error_reason"`
+	TransactionType            TransactionTypes      `json:"transaction_type"`
+	Product                    ProductTypes          `json:"product"`
+	Variety                    VarietyTypes          `json:"variety"`
+	TotalQuantity              int                   `json:"total_quantity"`
+	PendingQuantity            int                   `json:"pending_quantity"`
+	TradedQuantity             int                   `json:"traded_quantity"`
+	DisclosedQuantity          int                   `json:"disclosed_quantity"`
+	DisclosedQuantityRemaining int                   `json:"disclosed_quantity_remaining"`
+	OrderPrice                 float64               `json:"order_price"`
+	TriggerPrice               float64               `json:"trigger_price"`
+	TradedPrice                float64               `json:"traded_price,omitempty"`
+	Validity                   ValidityTypes         `json:"validity"`
+	Symbol                     string                `json:"symbol"`
+	Series                     string                `json:"series"`
+	InstrumentName             InstrumentName        `json:"instrument_name"`
+	ExpiryDate                 string                `json:"expiry_date"`
+	StrikePrice                float64               `json:"strike_price"`
+	OptionType                 OptionType            `json:"option_type"`
+	LotSize                    int                   `json:"lot_size"`
+	OrderCreatedAt             string                `json:"order_created_at"`
+	InitiatedBy                string                `json:"initiated_by"`
+	ModifiedBy                 string                `json:"modified_by"`
+	IsAMO                      bool                  `json:"is_amo"`
+	OrderIdentifier            string                `json:"order_identifier"`
+	TagsIds                    pq.Int32Array         `json:"tags_ids"`
+	MiddlewareOrderId          uint                  `json:"middleware_order_id"`
+	Iceberg                    *OrderBookIcebergInfo `json:"iceberg,omitempty"`
+	Gtt                        *OrderBookGttInfo     `json:"gtt,omitempty"`
+}
+type OrderBookIcebergInfo struct {
+	IcebergOrderId  uuid.UUID `json:"iceberg_order_id"`
+	IcebergSequence int       `json:"iceberg_sequence"`
+	Legs            int       `json:"legs"`
+}
+
+type OrderBookGttInfo struct {
+	TriggerType          GttTriggerType `json:"trigger_type"`
+	SlTriggerPercent     *float64       `json:"sl_trigger_percent,omitempty"`
+	ProfitTriggerPercent *float64       `json:"profit_trigger_percent,omitempty"`
 }
 
 type LoginResponse struct {
@@ -299,7 +325,7 @@ type OrderResponse struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
 	Data    struct {
-		OrderID string `json:"orderId"`
+		OrderID string `json:"order_id"`
 	} `json:"data"`
 }
 
@@ -319,7 +345,7 @@ type Trade struct {
 	InstrumentName  string           `json:"instrument_name"`
 	ExpiryDate      string           `json:"expiry_date"`
 	StrikePrice     float64          `json:"strike_price"`
-	OptionType      string           `json:"option_type"`
+	OptionType      OptionType       `json:"option_type"`
 	TradedAt        string           `json:"traded_at"`
 	InitiatedBy     string           `json:"initiated_by"`
 	ModifiedBy      string           `json:"modified_by"`
@@ -389,10 +415,10 @@ type OrderHistory struct {
 	ValidityDays           int              `json:"validity_days"`
 	Symbol                 string           `json:"symbol"`
 	Series                 string           `json:"series"`
-	InstrumentName         string           `json:"instrument_name"`
+	InstrumentName         InstrumentName   `json:"instrument_name"`
 	ExpiryDate             string           `json:"expiry_date"`
 	StrikePrice            float64          `json:"strike_price"`
-	OptionType             string           `json:"option_type"`
+	OptionType             OptionType       `json:"option_type"`
 	OrderCreatedAt         string           `json:"order_created_at"`
 	ExchangeOrderCreatedAt string           `json:"exchange_order_created_at"`
 	InitiatedBy            string           `json:"initiated_by"`
@@ -403,4 +429,142 @@ type OrderHistory struct {
 
 type Metadata struct {
 	TotalRecords int `json:"total_records"`
+}
+
+type InstrumentName string
+
+const (
+	InstrumentNameEqIndex             InstrumentName = "EQIDX"
+	InstrumentNameCom                 InstrumentName = "COM"
+	InstrumentNameEquities            InstrumentName = "EQUITIES"
+	InstrumentNameCommodityFuture     InstrumentName = "FUTCOM"
+	InstrumentNameCurrencyFuture      InstrumentName = "FUTCUR"
+	InstrumentNameIndexFuture         InstrumentName = "FUTIDX"
+	InstrumentNameInterestFuture      InstrumentName = "FUTIRC"
+	InstrumentNameInterestFutureT     InstrumentName = "FUTIRT"
+	InstrumentNameStockFuture         InstrumentName = "FUTSTK"
+	InstrumentNameCurrencyOption      InstrumentName = "OPTCUR"
+	InstrumentNameCommodityOption     InstrumentName = "OPTFUT"
+	InstrumentNameIndexOption         InstrumentName = "OPTIDX"
+	InstrumentNameInterestOption      InstrumentName = "OPTIRC"
+	InstrumentNameStockOption         InstrumentName = "OPTSTK"
+	InstrumentNameCurrentcyUnderlying InstrumentName = "UNDCUR"
+)
+
+type OptionType string
+
+const (
+	OptionTypeCall OptionType = "CE"
+	OptionTypePut  OptionType = "PE"
+)
+
+type GttOrderbookResponse struct {
+	Status string              `json:"status"`
+	Data   []*GttOrderResponse `json:"data"`
+}
+
+type GttOrderResponse struct {
+	Id              uuid.UUID                `json:"id"`
+	Token           int                      `json:"token" binding:"required"`
+	Exchange        ExchangeTypes            `json:"exchange" binding:"required"`
+	Symbol          string                   `json:"symbol" binding:"required"`
+	Series          string                   `json:"series" binding:"required"`
+	InstrumentName  InstrumentName           `json:"instrument_name" binding:"required"`
+	ExpiryDate      string                   `json:"expiry_date" binding:"required"`
+	StrikePrice     float64                  `json:"strike_price" binding:"required"`
+	OptionType      OptionType               `json:"option_type" binding:"required"`
+	LotSize         int                      `json:"lot_size" binding:"required"`
+	TriggerType     GttTriggerType           `json:"trigger_type" binding:"required"`
+	TransactionType TransactionTypes         `json:"transaction_type" binding:"required"`
+	TagIds          pq.Int32Array            `json:"tag_ids"`
+	Orders          []GttOrderResponseOrders `json:"orders" binding:"required"`
+}
+
+type GttOrderResponseOrders struct {
+	Id              uint             `json:"id"`
+	ProductType     ProductTypes     `json:"product"`
+	Variety         VarietyTypes     `json:"variety"`
+	TransactionType TransactionTypes `json:"transaction_type"`
+	Price           float64          `json:"price"`
+	TriggerPrice    float64          `json:"trigger_price"`
+	Quantity        int              `json:"quantity"`
+	Status          GttOrderStatus   `json:"status"`
+	CreatedAt       time.Time        `json:"created_at"`
+	UpdatedAt       time.Time        `json:"updated_at"`
+	TrigerredAt     time.Time        `json:"trigerred_at"`
+}
+
+type GttOrderStatus string
+
+const (
+	GttOrderStatusTriggered GttOrderStatus = "triggered"
+	GttOrderStatusActive    GttOrderStatus = "active"
+	GttOrderStatusCancelled GttOrderStatus = "cancelled"
+	GttOrderStatusExpired   GttOrderStatus = "expired"
+	GttOrderStatusCompleted GttOrderStatus = "completed"
+)
+
+type FundResponse struct {
+	Nse ExchangeFundResponse `json:"nse"`
+	Mcx ExchangeFundResponse `json:"mcx"`
+}
+
+type ExchangeFundResponse struct {
+	Deposit             float64 `json:"deposit"`
+	FundsTransferred    float64 `json:"funds_transferred"`
+	Collateral          float64 `json:"collateral"`
+	CreditForSale       float64 `json:"credit_for_sale"`
+	OptionCreditForSale float64 `json:"option_credit_for_sale"`
+	LimitUtilization    float64 `json:"limit_utilization"`
+	MtmAndBookedLoss    float64 `json:"mtm_and_booked_loss"`
+	BookedProfit        float64 `json:"booked_profit"`
+	TotalTradingPower   float64 `json:"total_trading_power"`
+	TotalUtilization    float64 `json:"total_utilization"`
+	NetAvailable        float64 `json:"net_available"`
+	FundsWithdrawal     float64 `json:"funds_withdrawal"`
+}
+
+type FundWithdrawalListResponse struct {
+	Status  string               `json:"status"`
+	Message string               `json:"message,omitempty"`
+	Data    []FundWithdrawalItem `json:"data"`
+}
+
+type FundWithdrawalItem struct {
+	TransactionId string        `json:"transaction_id"`
+	Amount        float64       `json:"amount"`
+	CreatedAt     time.Time     `json:"created_at"`
+	Status        string        `json:"status"`
+	Exchange      ExchangeTypes `json:"exchange"`
+}
+
+type TagResponse struct {
+	Status  string  `json:"status"`
+	Message string  `json:"message"`
+	Data    TagInfo `json:"data"`
+}
+
+type TagsResponse struct {
+	Status  string    `json:"status"`
+	Message string    `json:"message"`
+	Data    []TagInfo `json:"data"`
+}
+type TagInfo struct {
+	Id          int       `json:"id"`
+	ClientCode  string    `json:"client_code"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+type PlaceIcebergOrderResponse struct {
+	Message string           `json:"message"`
+	Code    string           `json:"code"`
+	Status  string           `json:"status"`
+	Data    IcebergOrderData `json:"data"`
+}
+type IcebergOrderData struct {
+	IcebergOrderId string `json:"iceberg_order_id"`
+	FirstOrderId   string `json:"first_order_id"`
 }

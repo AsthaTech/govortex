@@ -56,9 +56,9 @@ func (v *VortexApi) ModifyOrder(ctx context.Context, request ModifyOrderRequest,
 // CancelOrder cancels an existing order with the Vortex API.
 // It takes a context, an ExchangeTypes value, and an order ID as input.
 // It returns an OrderResponse and an error.
-func (v *VortexApi) CancelOrder(ctx context.Context, exchange ExchangeTypes, orderID string) (*OrderResponse, error) {
+func (v *VortexApi) CancelOrder(ctx context.Context, orderID string) (*OrderResponse, error) {
 	var resp OrderResponse
-	_, err := v.doJson(ctx, "DELETE", fmt.Sprintf(URIDeleterOrder, "regular", exchange, orderID), nil, nil, nil, &resp)
+	_, err := v.doJson(ctx, "DELETE", fmt.Sprintf(URIDeleteOrder, "regular", orderID), nil, nil, nil, &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -69,11 +69,9 @@ func (v *VortexApi) CancelOrder(ctx context.Context, exchange ExchangeTypes, ord
 // Orders retrieves the order book information from the Vortex API.
 // It takes a context, an offset, and a limit as input.
 // It returns an OrderBookResponse and an error.
-func (v *VortexApi) Orders(ctx context.Context, offset int, limit int) (*OrderBookResponse, error) {
+func (v *VortexApi) Orders(ctx context.Context) (*OrderBookResponse, error) {
 	var resp OrderBookResponse
 	params := url.Values{}
-	params.Add("offset", fmt.Sprintf("%d", offset))
-	params.Add("limit", fmt.Sprintf("%d", limit))
 	_, err := v.doJson(ctx, "GET", URIOrderBook, nil, params, nil, &resp)
 	if err != nil {
 		return nil, err
