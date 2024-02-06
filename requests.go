@@ -1,6 +1,8 @@
 package govortex
 
-import "github.com/lib/pq"
+import (
+	"github.com/lib/pq"
+)
 
 type PlaceOrderRequest struct {
 	Exchange          ExchangeTypes    `json:"exchange"`
@@ -131,4 +133,48 @@ type ModifyIcebergOrderRequest struct {
 	Price          float64 `json:"price"`
 	TriggerPrice   float64 `json:"trigger_price" `
 	TradedQuantity int     `json:"traded_quantity"`
+}
+
+type StrategiesRequest struct {
+	Token       int    `json:"token"`
+	Symbol      string `json:"symbol"`
+	ExpYYYYMMDD string `json:"expiry_date"`
+}
+
+type OptionChainRequest struct {
+	Token      int           `json:"token"`       // required
+	ExpiryDate string        `json:"expiry_date"` //optional. format: YYYYMMDD. If not provided, result will be of closest expiry
+	Exchange   ExchangeTypes `json:"exchange"`    // required
+	AddGreek   bool          `json:"greeks"`      // optional. default: false
+}
+
+type StrategyBuilderRequest struct {
+	Token      int            `json:"token"` // required
+	Symbol     string         `json:"symbol"`
+	MarketView PredictionType `json:"prediction"`  // ["ABOVE", "BELOW", "BETWEEN"]
+	ExpiryDate string         `json:"expiry_date"` //required. format: YYYYMMDD
+	PriceRange []float64      `json:"price_range"`
+}
+
+type PredictionType string
+
+const (
+	PredictionTypeABOVE   PredictionType = "ABOVE"
+	PredictionTypeBELOW   PredictionType = "BELOW"
+	PredictionTypeBETWEEN PredictionType = "BETWEEN"
+)
+
+type PayoffRequest struct {
+	Symbol          string         `json:"symbol" `   //required
+	Exchange        ExchangeTypes  `json:"exchange" ` //required
+	Legs            []PayoffOption `json:"legs"`      //required
+	InpDaysToExpiry *int           `json:"days_to_expiry"`
+	CurrentPnl      float64        `json:"current_pnl"`
+}
+
+type PayoffOption struct {
+	Token    int     `json:"token"`            //required
+	Action   string  `json:"action"`           //required
+	Quantity int     `json:"quantity"`         //required, in lots
+	Ltp      float64 `json:"last_trade_price"` //optional
 }

@@ -3,7 +3,6 @@ package govortex
 import (
 	"time"
 
-	"github.com/gofrs/uuid"
 	"github.com/lib/pq"
 )
 
@@ -288,9 +287,9 @@ type Order struct {
 	Gtt                        *OrderBookGttInfo     `json:"gtt,omitempty"`
 }
 type OrderBookIcebergInfo struct {
-	IcebergOrderId  uuid.UUID `json:"iceberg_order_id"`
-	IcebergSequence int       `json:"iceberg_sequence"`
-	Legs            int       `json:"legs"`
+	IcebergOrderId  string `json:"iceberg_order_id"`
+	IcebergSequence int    `json:"iceberg_sequence"`
+	Legs            int    `json:"legs"`
 }
 
 type OrderBookGttInfo struct {
@@ -391,7 +390,7 @@ type OrderHistoryResponse struct {
 	Status   string         `json:"status"`
 	Code     string         `json:"code"`
 	Message  string         `json:"message"`
-	Data     []OrderHistory `json:"data"`
+	Data     []OrderHistory `json:"orders"`
 	Metadata Metadata       `json:"metadata"`
 }
 
@@ -464,7 +463,7 @@ type GttOrderbookResponse struct {
 }
 
 type GttOrderResponse struct {
-	Id              uuid.UUID                `json:"id"`
+	Id              string                   `json:"id"`
 	Token           int                      `json:"token" binding:"required"`
 	Exchange        ExchangeTypes            `json:"exchange" binding:"required"`
 	Symbol          string                   `json:"symbol" binding:"required"`
@@ -558,13 +557,158 @@ type TagInfo struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 
-type PlaceIcebergOrderResponse struct {
+type IcebergOrderResponse struct {
 	Message string           `json:"message"`
 	Code    string           `json:"code"`
 	Status  string           `json:"status"`
 	Data    IcebergOrderData `json:"data"`
 }
+
+type CancelIcebergOrderResponse struct {
+	Message string `json:"message"`
+	Status  string `json:"status"`
+}
 type IcebergOrderData struct {
 	IcebergOrderId string `json:"iceberg_order_id"`
 	FirstOrderId   string `json:"first_order_id"`
+}
+type StrategiesResponse struct {
+	Status  string           `json:"status"`
+	Message string           `json:"message"`
+	Data    StrategiesResult `json:"data"`
+}
+type StrategiesResult struct {
+	Symbol     string     `json:"symbol"`
+	Token      int        `json:"token"`
+	Ltp        float64    `json:"ltp"`
+	Strategies []Strategy `json:"strategies"`
+}
+
+type Strategy struct {
+	Name                 string               `json:"strategy_name"`
+	TradingOpportunities []TradingOpportunity `json:"trading_opportunities"`
+}
+type TradingOpportunity struct {
+	Legs             []StrategyLeg `json:"legs"`
+	MaxLoss          float64       `json:"max_loss"`
+	MaxProfit        float64       `json:"max_profit"`
+	IsInfiniteProfit bool          `json:"is_infinite_profit"`
+	IsInfiniteLoss   bool          `json:"is_infinite_loss"`
+	BreakEven        []float64     `json:"breakeven"`
+}
+
+type StrategyLeg struct {
+	Option   StrategyStock `json:"option"`
+	Action   string        `json:"action"`
+	Quantity int           `json:"quantity"`
+}
+
+type StrategyStock struct {
+	Token          int           `json:"token"`
+	InstrumentName string        `json:"instrument_name"`
+	Symbol         string        `json:"symbol"`
+	StrikePrice    float64       `json:"strike_price"`
+	OptionType     OptionType    `json:"option_type"`
+	LotSize        int           `json:"lot_size"`
+	SecurityDesc   string        `json:"security_description"`
+	Exchange       ExchangeTypes `json:"exchange"`
+	ExpYyyymmdd    string        `json:"expiry_date"`
+	Ltp            float64       `json:"ltp"`
+	Greeks         struct {
+		Theta float64 `json:"theta"`
+		Delta float64 `json:"delta"`
+		Gamma float64 `json:"gamma"`
+		Vega  float64 `json:"vega"`
+		Iv    float64 `json:"iv"`
+	} `json:"greeks"`
+}
+
+type OptionChainResponse struct {
+	Status   string            `json:"status"`
+	Message  string            `json:"message"`
+	Response OptionchainResult `json:"response"`
+}
+type OptionchainResult struct {
+	Symbol         string   `json:"symbol"`
+	ExpiryDate     string   `json:"expiry_date"`
+	HasParentStock bool     `json:"has_parent_stock"`
+	ExpiryDates    []string `json:"expiry_dates"`
+	Options        struct {
+		Exchange ExchangeTypes     `json:"exchange"`
+		List     []*DateOptionData `json:"list"`
+	} `json:"options"`
+	ParentStock struct {
+		Symbol   string        `json:"symbol"`
+		Exchange ExchangeTypes `json:"exchange"`
+		Token    int           `json:"token"`
+		ISINCode string        `json:"isin"`
+		LTP      float64       `json:"ltp"`
+	} `json:"parent"`
+}
+
+type DateOptionData struct {
+	StrikePrice float64        `json:"strike_price"`
+	IV          float64        `json:"iv"`
+	Theta       float64        `json:"theta"`
+	Vega        float64        `json:"vega"`
+	Gamma       float64        `json:"gamma"`
+	CE          StockWithGreek `json:"CE"`
+	PE          StockWithGreek `json:"PE"`
+}
+
+type StockWithGreek struct {
+	Token          int     `json:"token"`
+	InstrumentName string  `json:"instrument_name"`
+	LotSize        int     `json:"lot_size"`
+	SecurityDesc   string  `json:"security_description"`
+	Eligibility    int     `json:"eligibility"`
+	Ltp            float64 `json:"ltp"`
+	OpenInterest   int     `json:"open_interest"`
+	DayFirstTickOI int     `json:"day_first_tick_oi" `
+	Volume         int     `json:"volume"`
+	Delta          float64 `json:"delta"`
+}
+type PayoffResponse struct {
+	Status  string     `json:"status"`
+	Message string     `json:"message"`
+	Data    PayOffData `json:"data"`
+}
+
+type PayOffData struct {
+	MaxLoss          float64         `json:"max_loss"`
+	MaxProfit        float64         `json:"max_profit"`
+	IsInfiniteProfit bool            `json:"infinite_profit"`
+	IsInfiniteLoss   bool            `json:"infinite_loss"`
+	BreakEvens       []float64       `json:"breakevens"`
+	PayOffs          []PayOff        `json:"payoffs"`
+	CombinedGreeks   Greeks          `json:"combined_greeks"`
+	LivePrice        float64         `json:"last_trade_price"`
+	LegStocks        []LegStockGreek `json:"leg_greeks"`
+	MinDaysToExpiry  int             `json:"min_days_to_expiry"`
+}
+
+type LegStockGreek struct {
+	Token       int        `json:"token" binding:"required"`
+	StrikePrice float64    `json:"strike_price"`
+	OptionType  OptionType `json:"option_type"`
+	ExpYYYYMMDD string     `json:"expiry_date"`
+	Action      string     `json:"action"`
+	LotSize     int        `json:"lot_size"`
+	Quantity    int        `json:"quantity"`
+	Ltp         float64    `json:"last_trade_price"` // Update
+	Iv          float64    `json:"iv"`               // Update *hide
+	Greeks      Greeks     `json:"greeks" gorm:"-"`
+}
+type Greeks struct {
+	Theta float64 `json:"theta"`
+	Delta float64 `json:"delta"`
+	Gamma float64 `json:"gamma"`
+	Vega  float64 `json:"vega"`
+	Iv    float64 `json:"iv"`
+}
+
+type PayOff struct {
+	IPayoff float64 `json:"intraday_pay_off"`
+	EPayoff float64 `json:"expiry_pay_off"`
+	At      float64 `json:"at"`
 }

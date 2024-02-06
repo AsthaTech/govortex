@@ -3,7 +3,6 @@ package govortex
 import (
 	"context"
 	"fmt"
-	"net/url"
 )
 
 // PlaceOrder places an order with the Vortex API.
@@ -46,7 +45,7 @@ func (v *VortexApi) ModifyOrder(ctx context.Context, request ModifyOrderRequest,
 		request.ValidityDays = 1
 	}
 	var resp OrderResponse
-	_, err := v.doJson(ctx, "PUT", fmt.Sprintf(URIModifyOrder, "regular", exchange, orderID), request, nil, nil, &resp)
+	_, err := v.doJson(ctx, "PUT", fmt.Sprintf(URIModifyOrder, "regular", orderID), request, nil, nil, &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -71,8 +70,7 @@ func (v *VortexApi) CancelOrder(ctx context.Context, orderID string) (*OrderResp
 // It returns an OrderBookResponse and an error.
 func (v *VortexApi) Orders(ctx context.Context) (*OrderBookResponse, error) {
 	var resp OrderBookResponse
-	params := url.Values{}
-	_, err := v.doJson(ctx, "GET", URIOrderBook, nil, params, nil, &resp)
+	_, err := v.doJson(ctx, "GET", URIOrderBook, nil, nil, nil, &resp)
 	if err != nil {
 		return nil, err
 	}

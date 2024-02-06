@@ -33,22 +33,38 @@ const mockBaseDir = "./vortex-mocks"
 var MockResponders = [][]interface{}{
 	// GET REQUESTS
 
-	{http.MethodGet, URIFunds, url.Values{}, "funds.json"},
-	{http.MethodGet, URIHoldings, url.Values{}, "holdings.json"},
-	{http.MethodGet, URIPositions, url.Values{}, "positions.json"},
-	{http.MethodGet, URIOrderBook, url.Values{"limit": []string{"20"}, "offset": []string{"1"}}, "orders.json"},
-	{http.MethodGet, URIQuotes, url.Values{"q": []string{"NSE_EQ-22"}, "mode": []string{string(QuoteModesFULL)}}, "quotes.json"},
-	{http.MethodGet, URITrades, url.Values{"limit": []string{"20"}, "offset": []string{"1"}}, "trades.json"},
-	{http.MethodGet, URIHistory, url.Values{"exchange": []string{string(ExchangeTypesNSEEQUITY)}, "token": []string{"22"}, "from": []string{"1494505756"}, "to": []string{"1494505756"}, "resolution": []string{string(ResolutionsMin1)}}, "history.json"},
-	{http.MethodGet, fmt.Sprintf(URIOrderHistory, "test"), url.Values{}, "order_history.json"},
+	{http.MethodGet, URIFunds, url.Values{}, "user/funds.json"},
+	{http.MethodGet, URIHoldings, url.Values{}, "portfolio/holdings.json"},
+	{http.MethodGet, URIPositions, url.Values{}, "portfolio/positions.json"},
+	{http.MethodGet, URIOrderBook, url.Values{}, "portfolio/orders.json"},
+	{http.MethodGet, URIQuotes, url.Values{"q": []string{"NSE_EQ-22"}, "mode": []string{string(QuoteModesFULL)}}, "data/quotes.json"},
+	{http.MethodGet, URITrades, url.Values{"limit": []string{"20"}, "offset": []string{"1"}}, "portfolio/trades.json"},
+	{http.MethodGet, URIHistory, url.Values{"exchange": []string{string(ExchangeTypesNSEEQUITY)}, "token": []string{"22"}, "from": []string{"1494505756"}, "to": []string{"1494505756"}, "resolution": []string{string(ResolutionsMin1)}}, "data/history.json"},
+	{http.MethodGet, fmt.Sprintf(URIOrderHistory, "test"), url.Values{}, "regular_orders/order_history.json"},
+	{http.MethodGet, URIGttOrderBook, url.Values{}, "gtt_orders/list.json"},
+	{http.MethodGet, URITags, url.Values{}, "reports/tags/list.json"},
+
 	// DELETE REQUESTS
-	{http.MethodDelete, fmt.Sprintf(URIDeleteOrder, "regular", ExchangeTypesNSEEQUITY, "NXAAE00002K3"), url.Values{}, "order.json"},
+	{http.MethodDelete, fmt.Sprintf(URIDeleteOrder, "regular", "NXAAE00002K3"), url.Values{}, "regular_orders/order.json"},
+	{http.MethodDelete, fmt.Sprintf(URIDeleteOrder, "gtt", "99823d7b-fd37-4d75-af7f-f21ec4671852"), url.Values{}, "gtt_orders/delete.json"},
+	{http.MethodDelete, fmt.Sprintf(URITag, 1), url.Values{}, "reports/tags/delete.json"},
+	{http.MethodDelete, fmt.Sprintf(URIDeleteOrder, "iceberg", "5eaefd25-518c-4a39-b556-93fc8e78e855"), url.Values{}, "iceberg_orders/delete.json"},
 	// POST  REQUESTS
-	{http.MethodPost, fmt.Sprintf(URIPlaceOrder, "regular"), url.Values{}, "order.json"},
+	{http.MethodPost, fmt.Sprintf(URIPlaceOrder, "regular"), url.Values{}, "regular_orders/order.json"},
+	{http.MethodPost, fmt.Sprintf(URIPlaceOrder, "gtt"), url.Values{}, "gtt_orders/create.json"},
+	{http.MethodPost, fmt.Sprintf(URIPlaceOrder, "iceberg"), url.Values{}, "iceberg_orders/create.json"},
+	{http.MethodPost, URITags, url.Values{}, "reports/tags/create.json"},
+	{http.MethodPost, URIStrategies, url.Values{}, "strategies/all.json"},
+	{http.MethodPost, URIOptionChain, url.Values{}, "strategies/option_chain.json"},
+	{http.MethodPost, URIBuildStrategies, url.Values{}, "strategies/build_strategy.json"},
+	{http.MethodPost, URIPayoffStrategies, url.Values{}, "strategies/payoff.json"},
 
 	// PUT REQUESTS
-	{http.MethodPut, fmt.Sprintf(URIModifyOrder, "regular", ExchangeTypesNSEEQUITY, "NXAAE00002K3"), url.Values{}, "order.json"},
-	{http.MethodPut, URIConvertposition, url.Values{}, "position_conversion.json"},
+	{http.MethodPut, fmt.Sprintf(URIModifyOrder, "regular", "NXAAE00002K3"), url.Values{}, "regular_orders/order.json"},
+	{http.MethodPut, URIConvertposition, url.Values{}, "portfolio/position_conversion.json"},
+	{http.MethodPut, fmt.Sprintf(URIModifyOrder, "gtt", "99823d7b-fd37-4d75-af7f-f21ec4671852"), url.Values{}, "gtt_orders/modify.json"},
+	{http.MethodPut, fmt.Sprintf(URIModifyOrder, "iceberg", "5eaefd25-518c-4a39-b556-93fc8e78e855"), url.Values{}, "iceberg_orders/modify.json"},
+	{http.MethodPut, fmt.Sprintf(URITag, 1), url.Values{}, "reports/tags/update.json"},
 }
 
 const suiteTestMethodPrefix = "Test"

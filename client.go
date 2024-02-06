@@ -115,5 +115,6 @@ func (v *VortexApi) doJson(ctx context.Context, method, uri string, body interfa
 	if v.AccessToken != "" {
 		headers.Add("Authorization", "Bearer "+v.AccessToken)
 	}
+	fmt.Println("URL:", v.baseURL+uri)
 	return v.htt.doJSON(ctx, method, v.baseURL+uri, body, params, headers, obj)
 }
