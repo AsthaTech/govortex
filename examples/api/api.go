@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 
-	govortex "github.com/AsthaTech/govortex"
+	govortex "github.com/AsthaTech/govortex/v2"
 )
 
 const (
