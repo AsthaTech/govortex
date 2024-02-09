@@ -85,3 +85,12 @@ func (v *VortexApi) OrderHistory(ctx context.Context, orderId string) (*OrderHis
 	}
 	return &resp, nil
 }
+
+func (v *VortexApi) CancelMultipleRegularOrders(ctx context.Context, req MultipleOrderCancelRequest) (*MultipleOrderResponse, error) {
+	var resp MultipleOrderResponse
+	_, err := v.doJson(ctx, "POST", URIMultiCancelrders, req, nil, nil, &resp)
+	if err != nil {
+		return nil, err
+	}
+	return &resp, nil
+}

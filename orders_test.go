@@ -71,3 +71,17 @@ func (ts *TestSuite) TestOrderHistory(t *testing.T) {
 		t.Errorf("Error while fetching order history. %s", "order history is empty")
 	}
 }
+
+func (ts *TestSuite) TestMultipleOrderCancel(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	request := MultipleOrderCancelRequest{}
+	resp, err := ts.VortexApiClient.CancelMultipleRegularOrders(ctx, request)
+	if err != nil {
+		t.Errorf("Error while cancelling order: %v", err.Error())
+		return
+	}
+	if len(resp.Data) == 0 {
+		t.Errorf("Error while cancelling order: %s", "order history is empty")
+	}
+}

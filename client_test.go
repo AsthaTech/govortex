@@ -58,6 +58,7 @@ var MockResponders = [][]interface{}{
 	{http.MethodPost, URIOptionChain, url.Values{}, "strategies/option_chain.json"},
 	{http.MethodPost, URIBuildStrategies, url.Values{}, "strategies/build_strategy.json"},
 	{http.MethodPost, URIPayoffStrategies, url.Values{}, "strategies/payoff.json"},
+	{http.MethodPost, URIMultiCancelrders, url.Values{}, "regular_orders/multi_cancel.json"},
 
 	// PUT REQUESTS
 	{http.MethodPut, fmt.Sprintf(URIModifyOrder, "regular", "NXAAE00002K3"), url.Values{}, "regular_orders/order.json"},

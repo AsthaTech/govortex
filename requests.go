@@ -210,3 +210,7 @@ type ExchangeAuthTokenRequest struct {
 	ApplicationId string `json:"applicationId"`
 	Token         string `json:"token"`
 }
+
+type MultipleOrderCancelRequest struct {
+	OrderIds []string `json:"order_ids"`
+}

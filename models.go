@@ -712,3 +712,8 @@ type PayOff struct {
 	EPayoff float64 `json:"expiry_pay_off"`
 	At      float64 `json:"at"`
 }
+
+type MultipleOrderResponse struct {
+	Status string          `json:"status"`
+	Data   []OrderResponse `json:"data"`
+}
