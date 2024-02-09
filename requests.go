@@ -204,3 +204,9 @@ type PayoffOption struct {
 	Quantity int          `json:"quantity"`         // Required: Quantity of the option.
 	Ltp      float64      `json:"last_trade_price"` // Optional: Last traded price for the option.
 }
+
+type ExchangeAuthTokenRequest struct {
+	Checksum      string `json:"checksum"`
+	ApplicationId string `json:"applicationId"`
+	Token         string `json:"token"`
+}

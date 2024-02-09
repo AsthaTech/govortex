@@ -20,6 +20,7 @@ const (
 // Constants for the API endpoints
 const (
 	URILogin               string = "/user/login"
+	URISession             string = "/user/session"
 	URIInstruments         string = "/data/instruments"
 	URIPlaceOrder          string = "/trading/orders/%s"              //"/trading/orders/regular"
 	URIModifyOrder         string = "/trading/orders/%s/%s"           //"/trading/orders/{{order_type}}/{order_id}"
