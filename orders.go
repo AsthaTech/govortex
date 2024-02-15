@@ -3,6 +3,7 @@ package govortex
 import (
 	"context"
 	"fmt"
+	"net/url"
 )
 
 // PlaceOrder places an order with the Vortex API.
@@ -45,7 +46,8 @@ func (v *VortexApi) ModifyOrder(ctx context.Context, request ModifyOrderRequest,
 		request.ValidityDays = 1
 	}
 	var resp OrderResponse
-	_, err := v.doJson(ctx, "PUT", fmt.Sprintf(URIModifyOrder, "regular", orderID), request, nil, nil, &resp)
+	encodedOrderId := url.QueryEscape(orderID)
+	_, err := v.doJson(ctx, "PUT", fmt.Sprintf(URIModifyOrder, "regular", encodedOrderId), request, nil, nil, &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +59,8 @@ func (v *VortexApi) ModifyOrder(ctx context.Context, request ModifyOrderRequest,
 // It returns an OrderResponse and an error.
 func (v *VortexApi) CancelOrder(ctx context.Context, orderID string) (*OrderResponse, error) {
 	var resp OrderResponse
-	_, err := v.doJson(ctx, "DELETE", fmt.Sprintf(URIDeleteOrder, "regular", orderID), nil, nil, nil, &resp)
+	encodedOrderId := url.QueryEscape(orderID)
+	_, err := v.doJson(ctx, "DELETE", fmt.Sprintf(URIDeleteOrder, "regular", encodedOrderId), nil, nil, nil, &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +82,8 @@ func (v *VortexApi) Orders(ctx context.Context) (*OrderBookResponse, error) {
 
 func (v *VortexApi) OrderHistory(ctx context.Context, orderId string) (*OrderHistoryResponse, error) {
 	var resp OrderHistoryResponse
-	_, err := v.doJson(ctx, "GET", fmt.Sprintf(URIOrderHistory, orderId), nil, nil, nil, &resp)
+	encodedOrderId := url.QueryEscape(orderId)
+	_, err := v.doJson(ctx, "GET", fmt.Sprintf(URIOrderHistory, encodedOrderId), nil, nil, nil, &resp)
 	if err != nil {
 		return nil, err
 	}
