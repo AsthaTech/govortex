@@ -212,6 +212,17 @@ const (
 	ExchangeTypesMCX         ExchangeTypes = "MCX_FO"
 )
 
+type OrderStatus string
+
+const (
+	OrderStatusPending            OrderStatus = "PENDING"
+	OrderStausMiddlewarePending   OrderStatus = "middleware_pending"
+	OrderStatusMiddlewareRejected OrderStatus = "middleware_rejected"
+	OrderStatusRejected           OrderStatus = "REJECTED"
+	OrderStatusCancelled          OrderStatus = "CANCELLED"
+	OrderStatusCompleted          OrderStatus = "COMPLETED"
+)
+
 type TransactionTypes string
 
 const (
