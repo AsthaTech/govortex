@@ -14,7 +14,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gofrs/uuid"
 	"github.com/lib/pq"
 	"nhooyr.io/websocket"
 )
@@ -26,29 +25,43 @@ type SocketMessage struct {
 	Gtt        *GttInfo           `json:"gtt,omitempty"`
 	ClientCode string             `json:"client_code,omitempty"`
 }
+type AlertProperty string
 type AlertInfo struct {
-	Name            string          `json:"name"`
-	ClientCode      string          `json:"client_code"`
-	Token           int             `json:"token"`
-	MarketSegmentId MarketSegmentId `json:"market_segment_id"`
-	TriggerValue    float64         `json:"trigger_value"`
-	Property        AlertProperty   `json:"property"`
-	Condition       AlertCondition  `json:"condition"`
-	Status          string          `json:"status" `
-	Note            string          `json:"note"`
-	Expiry          time.Time       `json:"expiry"`
-	LastExecutedAt  time.Time       `json:"last_executed_at"`
-	IsExecuted      *bool           `json:"is_executed"`
-	CreatedAt       time.Time       `json:"created_at"`
-	UpdatedAt       time.Time       `json:"updated_at"`
+	Name           string         `json:"name"`
+	ClientCode     string         `json:"client_code"`
+	Token          int            `json:"token"`
+	Exchange       ExchangeTypes  `json:"exchange"`
+	TriggerValue   float64        `json:"trigger_value"`
+	Property       AlertProperty  `json:"property"`
+	Condition      AlertCondition `json:"condition"`
+	Status         string         `json:"status" `
+	Note           string         `json:"note"`
+	Expiry         time.Time      `json:"expiry"`
+	LastExecutedAt time.Time      `json:"last_executed_at"`
+	IsExecuted     *bool          `json:"is_executed"`
+	CreatedAt      time.Time      `json:"created_at"`
+	UpdatedAt      time.Time      `json:"updated_at"`
 }
+type AlertCondition string
+
+const (
+	AlertConditionLE AlertCondition = "LE"
+	AlertConditionGE AlertCondition = "GE"
+	AlertConditionEQ AlertCondition = "EQ"
+)
+
+const (
+	AlertPropertyLTP      AlertProperty = "LTP"
+	AlertPropertyVOLUME   AlertProperty = "VOLUME"
+	AlertPropertyAVGPRICE AlertProperty = "AVGPRICE"
+)
 
 type GttInfo struct {
-	Id              uuid.UUID        `json:"id"`
-	MarketSegmentId MarketSegmentId  `json:"market_segment_id"`
+	Id              string           `json:"id"`
 	Token           int              `json:"token"`
 	Exchange        ExchangeTypes    `json:"exchange"`
 	Symbol          string           `json:"symbol"`
+	StrikePrice     float64          `json:"strike_price"`
 	InstrumentName  string           `json:"instrument_name"`
 	ExpiryDate      string           `json:"expiry_date"`
 	OptionType      OptionType       `json:"option_type"`
@@ -58,6 +71,18 @@ type GttInfo struct {
 	TagIds          pq.Int32Array    `json:"tag_ids"`
 	OrderIdentifier string           `json:"order_identifier"`
 	Orders          []GttInfoOrder   `json:"orders"`
+}
+type GttInfoOrder struct {
+	Id           uint           `json:"id"`
+	Product      ProductTypes   `json:"product"`
+	Variety      VarietyTypes   `json:"variety"`
+	Price        *float64       `json:"price"`
+	TriggerPrice *float64       `json:"trigger_price"`
+	Quantity     int            `json:"quantity"`
+	Status       GttOrderStatus `json:"status"`
+	CreatedAt    time.Time      `json:"created_at"`
+	UpdatedAt    time.Time      `json:"updated_at"`
+	TrigerredAt  time.Time      `json:"trigerred_at"`
 }
 
 type SocketMessageData struct {
