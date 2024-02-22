@@ -144,12 +144,26 @@ func (h *httpClient) doRaw(ctx context.Context, method, rURL string, reqBody int
 // It returns the HTTPResponse and an error if any.
 func (h *httpClient) doJSON(ctx context.Context, method, rURL string, reqBody interface{}, params url.Values, headers http.Header, obj interface{}) (HTTPResponse, error) {
 	resp, err := h.do(ctx, method, rURL, reqBody, params, headers)
+	if err != nil {
+		return resp, err
+	}
 	switch resp.Response.StatusCode {
 	case http.StatusUnauthorized:
 		return resp, NewError(PermissionError, "Unauthorized access", nil)
-	}
-	if err != nil {
-		return resp, err
+	case http.StatusForbidden:
+		return resp, NewError(PermissionError, "Forbidden access", nil)
+	case http.StatusNotFound:
+		return resp, NewError(NotFoundError, "Resource not found", nil)
+	case http.StatusTooManyRequests:
+		return resp, NewError(GeneralError, "Too many requests", nil)
+	case http.StatusServiceUnavailable:
+		return resp, NewError(NetworkError, "Service unavailable", nil)
+	case http.StatusGatewayTimeout:
+		return resp, NewError(NetworkError, "Gateway timeout", nil)
+	case http.StatusInternalServerError:
+		return resp, NewError(GeneralError, "Internal server error", nil)
+	case http.StatusBadRequest:
+		return resp, NewError(InputError, "Bad request", nil)
 	}
 
 	// We now unmarshal the body.

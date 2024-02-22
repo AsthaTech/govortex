@@ -85,3 +85,48 @@ func (ts *TestSuite) TestMultipleOrderCancel(t *testing.T) {
 		t.Errorf("Error while cancelling order: %s", "order history is empty")
 	}
 }
+
+func (ts *ErrorTestSuite) TestPlaceOrder(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	request := PlaceOrderRequest{}
+	_, err := ts.VortexApiClient.PlaceOrder(ctx, request)
+	checkError429(t, err)
+}
+
+func (ts *ErrorTestSuite) TestModifyOrder(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	request := ModifyOrderRequest{}
+	_, err := ts.VortexApiClient.ModifyOrder(ctx, request, ExchangeTypesNSEEQUITY, "NXAAE00002K3")
+	checkError429(t, err)
+}
+
+func (ts *ErrorTestSuite) TestCancelOrder(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	_, err := ts.VortexApiClient.CancelOrder(ctx, "NXAAE00002K3")
+	checkError429(t, err)
+}
+
+func (ts *ErrorTestSuite) TestOrderBook(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	_, err := ts.VortexApiClient.Orders(ctx)
+	checkError429(t, err)
+}
+
+func (ts *ErrorTestSuite) TestOrderHistory(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	_, err := ts.VortexApiClient.OrderHistory(ctx, "test")
+	checkError429(t, err)
+}
+
+func (ts *ErrorTestSuite) TestMultipleOrderCancel(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	request := MultipleOrderCancelRequest{}
+	_, err := ts.VortexApiClient.CancelMultipleRegularOrders(ctx, request)
+	checkError429(t, err)
+}

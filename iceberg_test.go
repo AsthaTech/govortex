@@ -43,3 +43,24 @@ func (ts *TestSuite) TestCancelIcebergOrder(t *testing.T) {
 		t.Errorf("Error while cancelling order. %s", "status is not success")
 	}
 }
+
+func (ts *ErrorTestSuite) TestPlaceIcebergOrder(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	_, err := ts.VortexApiClient.PlaceIcebergOrder(ctx, PlaceIcebergOrderRequest{})
+	checkError429(t, err)
+}
+
+func (ts *ErrorTestSuite) TestModifyIcebergOrder(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	_, err := ts.VortexApiClient.ModifyIcebergOrder(ctx, "5eaefd25-518c-4a39-b556-93fc8e78e855", ModifyIcebergOrderRequest{})
+	checkError429(t, err)
+}
+
+func (ts *ErrorTestSuite) TestCancelIcebergOrder(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	_, err := ts.VortexApiClient.CancelIcebergOrder(ctx, "5eaefd25-518c-4a39-b556-93fc8e78e855")
+	checkError429(t, err)
+}

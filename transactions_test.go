@@ -57,3 +57,37 @@ func (ts *TestSuite) TestTrades(t *testing.T) {
 		t.Errorf("Error while fetching trades. %v", "empty trade book")
 	}
 }
+
+func (ts *ErrorTestSuite) TestGetPositions(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	_, err := ts.VortexApiClient.Positions(ctx)
+	checkError429(t, err)
+}
+
+func (ts *ErrorTestSuite) TestConvertPosition(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	_, err := ts.VortexApiClient.ConvertPosition(ctx, ConvertPositionRequest{
+		Exchange:        ExchangeTypesNSEEQUITY,
+		Token:           22,
+		TransactionType: TransactionTypesBUY,
+		OldProductType:  ProductTypesIntraday,
+		NewProductType:  ProductTypesDelivery,
+	})
+	checkError429(t, err)
+}
+
+func (ts *ErrorTestSuite) TestGetHoldings(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	_, err := ts.VortexApiClient.Holdings(ctx)
+	checkError429(t, err)
+}
+
+func (ts *ErrorTestSuite) TestTrades(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	_, err := ts.VortexApiClient.Trades(ctx, 1, 20)
+	checkError429(t, err)
+}

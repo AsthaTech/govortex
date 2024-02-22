@@ -31,3 +31,17 @@ func (ts *TestSuite) TestHistoricalCandles(t *testing.T) {
 		t.Errorf("Errorwhile fetching historical candles. %s", "historical candles are empty")
 	}
 }
+
+func (ts *ErrorTestSuite) TestQuotes(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	_, err := ts.VortexApiClient.Quotes(ctx, []string{"NSE_EQ-22"}, QuoteModesFULL)
+	checkError429(t, err)
+}
+
+func (ts *ErrorTestSuite) TestHistoricalCandles(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	_, err := ts.VortexApiClient.HistoricalCandles(ctx, ExchangeTypesNSEEQUITY, 22, time.Unix(1494505756, 0), time.Unix(1494505756, 0), ResolutionsMin1)
+	checkError429(t, err)
+}

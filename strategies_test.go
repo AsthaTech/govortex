@@ -57,3 +57,30 @@ func (ts *TestSuite) TestPayoff(t *testing.T) {
 		t.Errorf("Error while fetching payoffs. %s", "length is 0")
 	}
 }
+
+func (ts *ErrorTestSuite) TestGetStrategies(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	_, err := ts.VortexApiClient.GetStrategies(ctx, StrategiesRequest{})
+	checkError429(t, err)
+}
+
+func (ts *ErrorTestSuite) TestOptionChain(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	_, err := ts.VortexApiClient.GetOptionChain(ctx, OptionChainRequest{})
+	checkError429(t, err)
+}
+func (ts *ErrorTestSuite) TestBuildStrategies(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	_, err := ts.VortexApiClient.BuildStrategy(ctx, StrategyBuilderRequest{})
+	checkError429(t, err)
+}
+
+func (ts *ErrorTestSuite) TestPayoff(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	_, err := ts.VortexApiClient.GetPayoff(ctx, PayoffRequest{})
+	checkError429(t, err)
+}

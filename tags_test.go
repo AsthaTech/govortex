@@ -57,3 +57,32 @@ func (ts *TestSuite) TestDeleteTag(t *testing.T) {
 		t.Errorf("Error while deleting tag. %s", "status is not success")
 	}
 }
+
+func (ts *ErrorTestSuite) TestCreateTag(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	request := TagRequest{}
+	_, err := ts.VortexApiClient.CreateTag(ctx, request)
+	checkError429(t, err)
+}
+
+func (ts *ErrorTestSuite) TestGetTags(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	_, err := ts.VortexApiClient.Tags(ctx)
+	checkError429(t, err)
+}
+
+func (ts *ErrorTestSuite) TestUpdateTag(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	_, err := ts.VortexApiClient.UpdateTag(ctx, 1, TagRequest{})
+	checkError429(t, err)
+}
+
+func (ts *ErrorTestSuite) TestDeleteTag(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	_, err := ts.VortexApiClient.DeleteTag(ctx, 1)
+	checkError429(t, err)
+}

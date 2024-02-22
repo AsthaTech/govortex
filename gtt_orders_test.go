@@ -57,3 +57,32 @@ func (ts *TestSuite) TestDeleteGttOrder(t *testing.T) {
 		t.Errorf("Error while modifying order. %s", "status is not success")
 	}
 }
+
+func (ts *ErrorTestSuite) TestPlaceGttOrder(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	request := PlaceGttRequest{}
+	_, err := ts.VortexApiClient.PlaceGttOrder(ctx, request)
+	checkError429(t, err)
+}
+
+func (ts *ErrorTestSuite) TestGetGttOrder(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	_, err := ts.VortexApiClient.GttOrders(ctx)
+	checkError429(t, err)
+}
+
+func (ts *ErrorTestSuite) TestModifyGttOrder(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	_, err := ts.VortexApiClient.ModifyGttOrder(ctx, "99823d7b-fd37-4d75-af7f-f21ec4671852", ModifyGttRequest{})
+	checkError429(t, err)
+}
+
+func (ts *ErrorTestSuite) TestDeleteGttOrder(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	_, err := ts.VortexApiClient.CancelGttOrder(ctx, "99823d7b-fd37-4d75-af7f-f21ec4671852")
+	checkError429(t, err)
+}

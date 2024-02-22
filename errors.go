@@ -12,6 +12,7 @@ const (
 	InputError      = "InputException"
 	DataError       = "DataException"
 	NetworkError    = "NetworkException"
+	NotFoundError   = "NotFoundException"
 )
 
 // Error is the error type used for all API errors.

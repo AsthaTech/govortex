@@ -52,8 +52,13 @@ type QuoteResponse struct {
 
 type MarginResponse struct {
 	Status    string  `json:"status"`
-	Required  float64 `json:"required"`
-	Available float64 `json:"available"`
+	Required  float64 `json:"required_margin"`
+	Available float64 `json:"available_margin"`
+}
+type BasketMarginResponse struct {
+	Status         string  `json:"status"`
+	InitialMargin  float64 `json:"initial_margin"`
+	RequiredMargin float64 `json:"required_margin"`
 }
 
 type FundsResponse struct {
@@ -312,6 +317,11 @@ type OrderBookGttInfo struct {
 type LoginResponse struct {
 	Status string   `json:"status"`
 	Data   UserData `json:"data"`
+}
+
+type LogoutResponse struct {
+	Status   string `json:"status"`
+	Response string `json:"response"`
 }
 
 type UserData struct {
@@ -727,4 +737,20 @@ type PayOff struct {
 type MultipleOrderResponse struct {
 	Status string          `json:"status"`
 	Data   []OrderResponse `json:"data"`
+}
+
+type BanksResponse struct {
+	Status string              `json:"status"`
+	Data   ExchangeBankDetails `json:"data"`
+}
+type ExchangeBankDetails struct {
+	Nse []BankDetails `json:"nse"`
+	Mcx []BankDetails `json:"mcx"`
+}
+type BankDetails struct {
+	AccountNumber string `json:"account_number"`
+	Ifsc          string `json:"ifsc"`
+	IsPrimary     bool   `json:"is_primary"`
+	AccountType   string `json:"account_type"`
+	BankName      string `json:"bank_name"`
 }

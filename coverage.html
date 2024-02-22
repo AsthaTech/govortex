@@ -1,0 +1,1832 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>v2: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/AsthaTech/govortex/v2/client.go (87.5%)</option>
+				
+				<option value="file1">github.com/AsthaTech/govortex/v2/errors.go (100.0%)</option>
+				
+				<option value="file2">github.com/AsthaTech/govortex/v2/gtt_orders.go (100.0%)</option>
+				
+				<option value="file3">github.com/AsthaTech/govortex/v2/http_client.go (90.2%)</option>
+				
+				<option value="file4">github.com/AsthaTech/govortex/v2/iceberg.go (100.0%)</option>
+				
+				<option value="file5">github.com/AsthaTech/govortex/v2/login.go (100.0%)</option>
+				
+				<option value="file6">github.com/AsthaTech/govortex/v2/margins.go (100.0%)</option>
+				
+				<option value="file7">github.com/AsthaTech/govortex/v2/market_data.go (100.0%)</option>
+				
+				<option value="file8">github.com/AsthaTech/govortex/v2/master.go (0.0%)</option>
+				
+				<option value="file9">github.com/AsthaTech/govortex/v2/orders.go (86.4%)</option>
+				
+				<option value="file10">github.com/AsthaTech/govortex/v2/strategies.go (100.0%)</option>
+				
+				<option value="file11">github.com/AsthaTech/govortex/v2/tags.go (100.0%)</option>
+				
+				<option value="file12">github.com/AsthaTech/govortex/v2/transactions.go (100.0%)</option>
+				
+				<option value="file13">github.com/AsthaTech/govortex/v2/user.go (100.0%)</option>
+				
+				<option value="file14">github.com/AsthaTech/govortex/v2/wire.go (0.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package govortex
+
+import (
+        "context"
+        "fmt"
+        "net/http"
+        "net/url"
+        "time"
+)
+
+// Constants for the package
+const (
+        name           string        = "govortex"
+        version        string        = "2.0.0"
+        requestTimeout time.Duration = 7000 * time.Millisecond
+        baseURI        string        = "https://vortex-api.rupeezy.in/v2"
+        flowBaseURI    string        = "https://flow.rupeezy.in"
+)
+
+// Constants for the API endpoints
+const (
+        URILogin               string = "/user/login"
+        URISession             string = "/user/session"
+        URIInstruments         string = "/data/instruments"
+        URIPlaceOrder          string = "/trading/orders/%s"                   //"/trading/orders/regular"
+        URIModifyOrder         string = "/trading/orders/%s/%s"                //"/trading/orders/{{order_type}}/{order_id}"
+        URIModifyOrderTags     string = "/trading/orders/%s/%s/tags"           //"/trading/orders/{{order_type}}/{order_id}/tags"
+        URIDeleteOrder         string = "/trading/orders/%s/%s"                //"/trading/orders/{{order_type}}/{order_id}"
+        URIDeleteMultipleOrder string = "/trading/orders/%s/multi_delete"      //"/trading/orders/{{order_type}}/{order_id}"
+        URIGttOrderBook        string = "/trading/orders/gtt"                  //"/trading/orders/gtt"
+        URIOrderBook           string = "/trading/orders"                      //"/trading/orders"
+        URIMultiCancelrders    string = "/trading/orders/regular/multi_delete" //"/trading/orders/regular/multi_delete"
+        URIOrderHistory        string = "/trading/orders/%s"                   //"/trading/orders/{order_id}"
+        URITrades              string = "/trading/trades"
+
+        URIPositions       string = "/trading/portfolio/positions"
+        URIConvertposition string = "/trading/portfolio/positions"
+        URIHoldings        string = "/trading/portfolio/holdings"
+
+        URIFunds     string = "/user/funds"
+        URIBanks     string = "/user/profile/banks"
+        URIBrokerage string = "/user/profile/brokerage"
+
+        URIWithdrawal   string = "/user/funds/withdrawal"
+        URIOrderMargin  string = "/margins/order"
+        URIBasketMargin string = "/margins/basket"
+        URIQuotes       string = "/data/quote"
+        URIHistory      string = "/data/history"
+
+        URIOptionChain string = "/strategies/option_chain"
+
+        URIStrategies       string = "/strategies"
+        URIBuildStrategies  string = "/strategies/build"
+        URIPayoffStrategies string = "/strategies/payoff"
+
+        URITradeReport           string = "/reports/trades/%s?from_date=%s&amp;to_date=%s"
+        URITurnoverSummaryReport string = "/reports/turnover/summary/%s?from_date=%s&amp;to_date=%s"
+        URITurnoverDetailsReport string = "/reports/turnover/details/%s?from_date=%s&amp;to_date=%s"
+        URIPnLReport             string = "/reports/pnl/%s?from_date=%s&amp;to_date=%s"
+        URIMTFInterestReport     string = "/reports/mtf_interest/%s?from_date=%s&amp;to_date=%s"
+
+        URITags string = "/reports/tags"
+        URITag  string = "/reports/tags/%d"
+)
+
+// VortexApi is a struct representing the Vortex API client
+type VortexApi struct {
+        applicationId string
+        apiKey        string
+        AccessToken   string
+        baseURL       string
+        enableLogging bool
+        htt           HTTPClient
+}
+
+// Function to get a new instance of VortexApi Client.
+func InitializeVortexApi(applicationId string, apiKey string, apiClient *VortexApi) error <span class="cov8" title="1">{
+        apiClient.initialize(applicationId, apiKey)
+        return nil
+}</span>
+
+// Initialize sets the application ID and API key for the Vortex API client
+func (v *VortexApi) initialize(applicationId string, apiKey string) <span class="cov8" title="1">{
+        v.applicationId = applicationId
+        v.apiKey = apiKey
+        v.SetHTTPClient(&amp;http.Client{
+                Timeout: requestTimeout,
+        })
+        v.baseURL = baseURI
+}</span>
+
+// SetLogging sets the HTTP client with logging enabled
+func (v *VortexApi) SetLogging(flag bool) <span class="cov8" title="1">{
+        v.htt = NewHTTPClient(v.htt.GetClient().client, nil, flag)
+}</span>
+
+// SetHTTPClient sets the HTTP client for the Vortex API client
+func (v *VortexApi) SetHTTPClient(h *http.Client) <span class="cov8" title="1">{
+        v.htt = NewHTTPClient(h, nil, v.enableLogging)
+}</span>
+func (v *VortexApi) SetAccessToken(accessToken string) <span class="cov0" title="0">{
+        v.AccessToken = accessToken
+}</span>
+
+// GetLoginUrl returns the login URL for the Vortex API
+func (v *VortexApi) GetLoginUrl() string <span class="cov0" title="0">{
+        return fmt.Sprintf("%s/?applicationId=%s", flowBaseURI, v.applicationId)
+}</span>
+
+// doJson is a helper function that performs a JSON request to the Vortex API
+func (v *VortexApi) doJson(ctx context.Context, method, uri string, body interface{}, params url.Values, headers http.Header, obj interface{}) (HTTPResponse, error) <span class="cov8" title="1">{
+        if headers == nil </span><span class="cov8" title="1">{
+                headers = http.Header{}
+        }</span>
+        <span class="cov8" title="1">headers.Add("User-Agent", name+"/"+version)
+
+        if v.AccessToken != "" </span><span class="cov8" title="1">{
+                headers.Add("Authorization", "Bearer "+v.AccessToken)
+        }</span>
+        <span class="cov8" title="1">return v.htt.doJSON(ctx, method, v.baseURL+uri, body, params, headers, obj)</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package govortex
+
+import "net/http"
+
+const (
+        GeneralError    = "GeneralException"
+        TokenError      = "TokenException"
+        PermissionError = "PermissionError"
+        UserError       = "UserException"
+        TwoFAError      = "TwoFAException"
+        OrderError      = "OrderException"
+        InputError      = "InputException"
+        DataError       = "DataException"
+        NetworkError    = "NetworkException"
+        NotFoundError   = "NotFoundException"
+)
+
+// Error is the error type used for all API errors.
+type Error struct {
+        Code      int
+        ErrorType string
+        Message   string
+        Data      interface{}
+}
+
+// This makes Error a valid Go error type.
+func (e Error) Error() string <span class="cov8" title="1">{
+        return e.Message
+}</span>
+
+// NewError creates and returns a new instace of Error
+// with custom error metadata.
+func NewError(etype string, message string, data interface{}) error <span class="cov8" title="1">{
+        var (
+                code = http.StatusInternalServerError
+        )
+
+        switch etype </span>{
+        case GeneralError:<span class="cov8" title="1">
+                code = http.StatusInternalServerError</span>
+        case TokenError:<span class="cov8" title="1">
+                code = http.StatusForbidden</span>
+        case PermissionError:<span class="cov8" title="1">
+                code = http.StatusForbidden</span>
+        case UserError:<span class="cov8" title="1">
+                code = http.StatusForbidden</span>
+        case TwoFAError:<span class="cov8" title="1">
+                code = http.StatusForbidden</span>
+        case OrderError:<span class="cov8" title="1">
+                code = http.StatusBadRequest</span>
+        case InputError:<span class="cov8" title="1">
+                code = http.StatusBadRequest</span>
+        case DataError:<span class="cov8" title="1">
+                code = http.StatusGatewayTimeout</span>
+        case NetworkError:<span class="cov8" title="1">
+                code = http.StatusServiceUnavailable</span>
+        default:<span class="cov8" title="1">
+                code = http.StatusInternalServerError
+                etype = GeneralError</span>
+        }
+
+        <span class="cov8" title="1">return newError(etype, message, code, data)</span>
+}
+
+func newError(etype, message string, code int, data interface{}) Error <span class="cov8" title="1">{
+        return Error{
+                Message:   message,
+                ErrorType: etype,
+                Data:      data,
+                Code:      code,
+        }
+}</span>
+
+// GetErrorName returns an error name given an HTTP code.
+func GetErrorName(code int) string <span class="cov8" title="1">{
+        var err string
+
+        switch code </span>{
+        case http.StatusInternalServerError:<span class="cov8" title="1">
+                err = GeneralError</span>
+        case http.StatusForbidden, http.StatusUnauthorized:<span class="cov8" title="1">
+                err = TokenError</span>
+        case http.StatusBadRequest:<span class="cov8" title="1">
+                err = InputError</span>
+        case http.StatusServiceUnavailable, http.StatusGatewayTimeout:<span class="cov8" title="1">
+                err = NetworkError</span>
+        default:<span class="cov8" title="1">
+                err = GeneralError</span>
+        }
+
+        <span class="cov8" title="1">return err</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package govortex
+
+import (
+        "context"
+        "fmt"
+)
+
+// PlaceGttOrder places a Good Till Trigger (GTT) order with the Vortex API.
+// It takes a context and a PlaceGttRequest as input.
+// It returns an OrderResponse and an error.
+func (v *VortexApi) PlaceGttOrder(ctx context.Context, request PlaceGttRequest) (*OrderResponse, error) <span class="cov8" title="1">{
+        var resp OrderResponse
+        _, err := v.doJson(ctx, "POST", fmt.Sprintf(URIPlaceOrder, "gtt"), request, nil, nil, &amp;resp)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;resp, nil</span>
+}
+
+// ModifyGttOrder modifies an existing Good Till Trigger (GTT) order with the Vortex API.
+// It takes a context, a GTT order ID, and a ModifyGttRequest as input.
+// It returns an OrderResponse and an error.
+func (v *VortexApi) ModifyGttOrder(ctx context.Context, gtt_order_id string, request ModifyGttRequest) (*OrderResponse, error) <span class="cov8" title="1">{
+        var resp OrderResponse
+        _, err := v.doJson(ctx, "PUT", fmt.Sprintf(URIModifyOrder, "gtt", gtt_order_id), request, nil, nil, &amp;resp)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;resp, nil</span>
+}
+
+// CancelGttOrder cancels an existing Good Till Trigger (GTT) order with the Vortex API.
+// It takes a context and a GTT order ID as input.
+// It returns an OrderResponse and an error.
+func (v *VortexApi) CancelGttOrder(ctx context.Context, gtt_order_id string) (*OrderResponse, error) <span class="cov8" title="1">{
+        var resp OrderResponse
+        _, err := v.doJson(ctx, "DELETE", fmt.Sprintf(URIDeleteOrder, "gtt", gtt_order_id), nil, nil, nil, &amp;resp)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;resp, nil</span>
+}
+
+// GttOrders retrieves the Good Till Trigger (GTT) orderbook from the Vortex API.
+// It takes a context as input.
+// It returns a GttOrderbookResponse and an error.
+func (v *VortexApi) GttOrders(ctx context.Context) (*GttOrderbookResponse, error) <span class="cov8" title="1">{
+        var resp GttOrderbookResponse
+        _, err := v.doJson(ctx, "GET", URIGttOrderBook, nil, nil, nil, &amp;resp)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;resp, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package govortex
+
+import (
+        "bytes"
+        "context"
+        "encoding/json"
+        "io"
+        "io/ioutil"
+        "log"
+        "net/http"
+        "net/url"
+        "os"
+        "time"
+)
+
+// HTTPClient defines the interface for performing HTTP requests.
+type HTTPClient interface {
+        do(ctx context.Context, method, rURL string, reqBody interface{}, params url.Values, headers http.Header) (HTTPResponse, error)
+        doRaw(ctx context.Context, method, rURL string, reqBody interface{}, params url.Values, headers http.Header) (HTTPResponse, error)
+        doJSON(ctx context.Context, method, rURL string, reqBody interface{}, params url.Values, headers http.Header, obj interface{}) (HTTPResponse, error)
+        GetClient() *httpClient
+}
+
+// httpClient is an implementation of the HTTPClient interface.
+type httpClient struct {
+        client *http.Client
+        hLog   *log.Logger
+        debug  bool
+}
+
+// HTTPResponse contains the response body and the HTTP response object.
+type HTTPResponse struct {
+        Body     []byte
+        Response *http.Response
+}
+
+// NewHTTPClient creates a new instance of the httpClient with the given HTTP client, logger, and debug flag.
+// If the logger is nil, it uses a default logger that writes to os.Stdout.
+// If the HTTP client is nil, it uses a default client with a 5-second timeout and default transport settings.
+func NewHTTPClient(h *http.Client, hLog *log.Logger, debug bool) HTTPClient <span class="cov8" title="1">{
+        if hLog == nil </span><span class="cov8" title="1">{
+                hLog = log.New(os.Stdout, "base.HTTP: ", log.Ldate|log.Ltime|log.Lshortfile)
+        }</span>
+
+        <span class="cov8" title="1">if h == nil </span><span class="cov8" title="1">{
+                h = &amp;http.Client{
+                        Timeout: time.Duration(5) * time.Second,
+                        Transport: &amp;http.Transport{
+                                MaxIdleConnsPerHost:   10,
+                                ResponseHeaderTimeout: time.Second * time.Duration(5),
+                        },
+                }
+        }</span>
+        <span class="cov8" title="1">return &amp;httpClient{
+                hLog:   hLog,
+                client: h,
+                debug:  debug,
+        }</span>
+}
+
+// do performs an HTTP request with the given method, URL, request body, URL parameters, and headers.
+// It returns the HTTPResponse and an error if any.
+func (h *httpClient) do(ctx context.Context, method, rURL string, reqBody interface{}, params url.Values, headers http.Header) (HTTPResponse, error) <span class="cov8" title="1">{
+        if params == nil </span><span class="cov8" title="1">{
+                params = url.Values{}
+        }</span>
+
+        <span class="cov8" title="1">return h.doRaw(ctx, method, rURL, reqBody, params, headers)</span>
+}
+
+// doRaw performs an HTTP request without JSON marshalling and unmarshalling.
+// It handles request encoding, URL parameters, and headers.
+// It returns the HTTPResponse and an error if any.
+func (h *httpClient) doRaw(ctx context.Context, method, rURL string, reqBody interface{}, params url.Values, headers http.Header) (HTTPResponse, error) <span class="cov8" title="1">{
+        var (
+                resp     = HTTPResponse{}
+                err      error
+                postBody io.Reader
+        )
+
+        // Encode POST / PUT params.
+        if (method == http.MethodPost || method == http.MethodPut) &amp;&amp; reqBody != nil </span><span class="cov8" title="1">{
+                aa, _ := json.Marshal(reqBody)
+                postBody = bytes.NewReader(aa)
+        }</span>
+
+        <span class="cov8" title="1">req, err := http.NewRequestWithContext(ctx, method, rURL, postBody)
+        if err != nil </span><span class="cov0" title="0">{
+                if h.debug </span><span class="cov0" title="0">{
+                        h.hLog.Printf("Request preparation failed: %v", err)
+                }</span>
+
+                <span class="cov0" title="0">return resp, NewError(NetworkError, "Request preparation failed.", nil)</span>
+        }
+
+        <span class="cov8" title="1">if headers != nil </span><span class="cov8" title="1">{
+                req.Header = headers
+        }</span>
+
+        // If a content-type isn't set, set the default one.
+        <span class="cov8" title="1">if req.Header.Get("Content-Type") == "" </span><span class="cov8" title="1">{
+                if method == http.MethodPost || method == http.MethodPut </span><span class="cov8" title="1">{
+                        req.Header.Add("Content-Type", "application/json")
+                }</span>
+        }
+
+        // If the request method is GET or DELETE, add the params as QueryString.
+        <span class="cov8" title="1">if method == http.MethodGet || method == http.MethodDelete </span><span class="cov8" title="1">{
+                req.URL.RawQuery = params.Encode()
+        }</span>
+
+        <span class="cov8" title="1">r, err := h.client.Do(req)
+        if err != nil </span><span class="cov8" title="1">{
+                if h.debug </span><span class="cov8" title="1">{
+                        h.hLog.Printf("Request failed: %v", err)
+                }</span>
+
+                <span class="cov8" title="1">return resp, NewError(NetworkError, "Request failed.", nil)</span>
+        }
+
+        <span class="cov8" title="1">defer r.Body.Close()
+
+        body, err := ioutil.ReadAll(r.Body)
+        if err != nil </span><span class="cov0" title="0">{
+                if h.debug </span><span class="cov0" title="0">{
+                        h.hLog.Printf("Unable to read response: %v", err)
+                }</span>
+
+                <span class="cov0" title="0">return resp, NewError(DataError, "Error reading response.", nil)</span>
+        }
+
+        <span class="cov8" title="1">resp.Response = r
+        resp.Body = body
+        if h.debug </span><span class="cov8" title="1">{
+                h.hLog.Printf("%s %s -- %d %v", method, req.URL.RequestURI(), resp.Response.StatusCode, req.Header)
+        }</span>
+
+        <span class="cov8" title="1">return resp, nil</span>
+}
+
+// doJSON performs an HTTP request with JSON marshalling and unmarshalling.
+// It calls the doRaw method to handle the request.
+// It expects a valid JSON response and unmarshals it into the provided obj interface.
+// It returns the HTTPResponse and an error if any.
+func (h *httpClient) doJSON(ctx context.Context, method, rURL string, reqBody interface{}, params url.Values, headers http.Header, obj interface{}) (HTTPResponse, error) <span class="cov8" title="1">{
+        resp, err := h.do(ctx, method, rURL, reqBody, params, headers)
+        if err != nil </span><span class="cov8" title="1">{
+                return resp, err
+        }</span>
+        <span class="cov8" title="1">switch resp.Response.StatusCode </span>{
+        case http.StatusUnauthorized:<span class="cov8" title="1">
+                return resp, NewError(PermissionError, "Unauthorized access", nil)</span>
+        case http.StatusForbidden:<span class="cov8" title="1">
+                return resp, NewError(PermissionError, "Forbidden access", nil)</span>
+        case http.StatusNotFound:<span class="cov8" title="1">
+                return resp, NewError(NotFoundError, "Resource not found", nil)</span>
+        case http.StatusTooManyRequests:<span class="cov8" title="1">
+                return resp, NewError(GeneralError, "Too many requests", nil)</span>
+        case http.StatusServiceUnavailable:<span class="cov8" title="1">
+                return resp, NewError(NetworkError, "Service unavailable", nil)</span>
+        case http.StatusGatewayTimeout:<span class="cov8" title="1">
+                return resp, NewError(NetworkError, "Gateway timeout", nil)</span>
+        case http.StatusInternalServerError:<span class="cov8" title="1">
+                return resp, NewError(GeneralError, "Internal server error", nil)</span>
+        case http.StatusBadRequest:<span class="cov8" title="1">
+                return resp, NewError(InputError, "Bad request", nil)</span>
+        }
+
+        // We now unmarshal the body.
+        <span class="cov8" title="1">if err := json.Unmarshal(resp.Body, obj); err != nil </span><span class="cov8" title="1">{
+                if h.debug </span><span class="cov8" title="1">{
+                        h.hLog.Printf(string(resp.Body))
+                        h.hLog.Printf("Error parsing JSON response: %v | %s", err, resp.Body)
+                }</span>
+                <span class="cov8" title="1">return resp, NewError(DataError, "Error parsing response.", nil)</span>
+        }
+        <span class="cov8" title="1">if h.debug </span><span class="cov8" title="1">{
+                h.hLog.Printf(string(resp.Body))
+        }</span>
+
+        <span class="cov8" title="1">return resp, nil</span>
+}
+
+// GetClient returns the underlying net/http client.
+func (h *httpClient) GetClient() *httpClient <span class="cov8" title="1">{
+        return h
+}</span>
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package govortex
+
+import (
+        "context"
+        "fmt"
+)
+
+// PlaceIcebergOrder places an iceberg order with the Vortex API.
+// It takes a context and a PlaceIcebergOrderRequest as input.
+// It returns an IcebergOrderResponse and an error.
+func (v *VortexApi) PlaceIcebergOrder(ctx context.Context, request PlaceIcebergOrderRequest) (*IcebergOrderResponse, error) <span class="cov8" title="1">{
+        var resp IcebergOrderResponse
+        _, err := v.doJson(ctx, "POST", fmt.Sprintf(URIPlaceOrder, "iceberg"), request, nil, nil, &amp;resp)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;resp, nil</span>
+}
+
+// ModifyIcebergOrder modifies an existing iceberg order with the Vortex API.
+// It takes a context, an iceberg order ID, and a ModifyIcebergOrderRequest as input.
+// It returns an IcebergOrderResponse and an error.
+func (v *VortexApi) ModifyIcebergOrder(ctx context.Context, iceberg_order_id string, request ModifyIcebergOrderRequest) (*IcebergOrderResponse, error) <span class="cov8" title="1">{
+        var resp IcebergOrderResponse
+        _, err := v.doJson(ctx, "PUT", fmt.Sprintf(URIModifyOrder, "iceberg", iceberg_order_id), request, nil, nil, &amp;resp)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;resp, nil</span>
+}
+
+// CancelIcebergOrder cancels an existing iceberg order with the Vortex API.
+// It takes a context and an iceberg order ID as input.
+// It returns a CancelIcebergOrderResponse and an error.
+func (v *VortexApi) CancelIcebergOrder(ctx context.Context, iceberg_order_id string) (*CancelIcebergOrderResponse, error) <span class="cov8" title="1">{
+        var resp CancelIcebergOrderResponse
+        _, err := v.doJson(ctx, "DELETE", fmt.Sprintf(URIDeleteOrder, "iceberg", iceberg_order_id), nil, nil, nil, &amp;resp)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;resp, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package govortex
+
+import (
+        "context"
+        "crypto/sha256"
+        "fmt"
+        "net/http"
+)
+
+// Login performs the login operation in the Vortex API.
+// It takes a context, client code, password, and TOTP (Time-Based One-Time Password) as input.
+// If the login is successful, the method updates the accessToken field of the VortexApi instance.
+// It returns the LoginResponse and an error.
+func (v *VortexApi) Login(ctx context.Context, clientCode string, password string, totp string) (*LoginResponse, error) <span class="cov8" title="1">{
+        data := map[string]string{
+                "client_code":    clientCode,
+                "password":       password,
+                "totp":           totp,
+                "application_id": v.applicationId,
+        }
+
+        var resp LoginResponse
+
+        header := http.Header{}
+        header.Add("x-api-key", v.apiKey)
+        _, err := v.doJson(ctx, "POST", URILogin, data, nil, header, &amp;resp)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">v.AccessToken = resp.Data.AccessToken
+        return &amp;resp, nil</span>
+}
+
+func (v *VortexApi) ExchangeToken(ctx context.Context, auth_token string) (*LoginResponse, error) <span class="cov8" title="1">{
+        request := ExchangeAuthTokenRequest{
+                Token:         auth_token,
+                ApplicationId: v.applicationId,
+                Checksum:      getSha256(v.applicationId + auth_token + v.apiKey),
+        }
+        var resp LoginResponse
+        header := http.Header{}
+        _, err := v.doJson(ctx, "POST", URISession, request, nil, header, &amp;resp)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;resp, nil</span>
+}
+
+func getSha256(s string) string <span class="cov8" title="1">{
+        h := sha256.New()
+        h.Write([]byte(s))
+        bs := h.Sum(nil)
+        return fmt.Sprintf("%x", bs)
+}</span>
+
+func (v *VortexApi) Logout(ctx context.Context) (*LogoutResponse, error) <span class="cov8" title="1">{
+        var resp LogoutResponse
+        _, err := v.doJson(ctx, "DELETE", URISession, nil, nil, nil, &amp;resp)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;resp, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package govortex
+
+import (
+        "context"
+)
+
+// OrderMargin gets the required margin to place or modify an order in the Vortex API.
+// It takes a context and an OrderMarginRequest as input.
+// It returns a MarginResponse and an error.
+func (v *VortexApi) OrderMargin(ctx context.Context, request *OrderMarginRequest) (*MarginResponse, error) <span class="cov8" title="1">{
+        var resp MarginResponse
+        _, err := v.doJson(ctx, "POST", URIOrderMargin, request, nil, nil, &amp;resp)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;resp, nil</span>
+}
+
+// BasketMargin gets the required margin to place a collection of new orders in the Vortex API.
+// It takes a context and an BasketMarginRequest as input.
+// It returns a BasketMarginResponse and an error.
+func (v *VortexApi) BasketMargin(ctx context.Context, request *BasketMarginRequest) (*BasketMarginResponse, error) <span class="cov8" title="1">{
+        var resp BasketMarginResponse
+        _, err := v.doJson(ctx, "POST", URIBasketMargin, request, nil, nil, &amp;resp)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;resp, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package govortex
+
+import (
+        "context"
+        "net/url"
+        "strconv"
+        "time"
+)
+
+// Quotes retrieves real-time quote information for the specified instruments from the Vortex API.
+// It takes a context, a slice of instrument names, and a quote mode as input.
+// It returns a QuoteResponse and an error.
+func (v *VortexApi) Quotes(ctx context.Context, instruments []string, mode QuoteModes) (*QuoteResponse, error) <span class="cov8" title="1">{
+        endpoint := "/data/quote"
+        params := url.Values{}
+        for i := 0; i &lt; len(instruments); i++ </span><span class="cov8" title="1">{
+                params.Add("q", instruments[i])
+        }</span>
+        <span class="cov8" title="1">params.Add("mode", string(mode))
+        var resp QuoteResponse
+        _, err := v.doJson(ctx, "GET", endpoint, nil, params, nil, &amp;resp)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;resp, nil</span>
+}
+
+// HistoricalCandles retrieves historical candlestick data from the Vortex API.
+// It takes a context, an ExchangeTypes value, a token, a start time, an end time, and a resolution as input.
+// It returns a HistoricalResponse and an error.
+func (v *VortexApi) HistoricalCandles(ctx context.Context, exchange ExchangeTypes, token int, from time.Time, to time.Time, resolution Resolutions) (*HistoricalResponse, error) <span class="cov8" title="1">{
+        params := url.Values{}
+        params.Add("exchange", string(exchange))
+        params.Add("token", strconv.Itoa(token))
+        params.Add("from", strconv.Itoa(int(from.Unix())))
+        params.Add("to", strconv.Itoa(int(to.Unix())))
+        params.Add("resolution", string(resolution))
+        var resp HistoricalResponse
+        _, err := v.doJson(ctx, "GET", URIHistory, nil, params, nil, &amp;resp)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;resp, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">package govortex
+
+import (
+        "context"
+        "encoding/csv"
+        "fmt"
+        "io"
+        "net/http"
+)
+
+// DownloadMaster retrieves the master data from the Vortex API.
+// It returns a slice of maps representing the CSV records and an error if any.
+func (v *VortexApi) DownloadMaster(ctx context.Context) ([]map[string]string, error) <span class="cov0" title="0">{
+        endpoint := "/data/instruments"
+        bearerToken := fmt.Sprintf("Bearer %s", v.AccessToken)
+        headers := make(http.Header, 0)
+        headers.Add("Content-Type", "application/json")
+        headers.Add("Authorization", bearerToken)
+        endpointUrl := v.baseURL + endpoint
+
+        req, err := http.NewRequestWithContext(ctx, "GET", endpointUrl, nil)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to create request: %w", err)
+        }</span>
+        <span class="cov0" title="0">req.Header = headers
+        client := &amp;http.Client{}
+        resp, err := client.Do(req)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to send request: %w", err)
+        }</span>
+        <span class="cov0" title="0">defer resp.Body.Close()
+
+        reader := csv.NewReader(resp.Body)
+        reader.TrimLeadingSpace = true
+
+        results := make([]map[string]string, 0)
+        columns := make([]string, 0)
+        reader.LazyQuotes = true
+        for </span><span class="cov0" title="0">{
+                record, err := reader.Read()
+                if err == io.EOF </span><span class="cov0" title="0">{
+                        break</span>
+                }
+                <span class="cov0" title="0">if err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("failed to read CSV record: %v", err)
+                }</span>
+                <span class="cov0" title="0">if len(columns) == 0 </span><span class="cov0" title="0">{
+                        columns = record
+                }</span> else<span class="cov0" title="0"> {
+                        row := make(map[string]string)
+                        for i, value := range record </span><span class="cov0" title="0">{
+                                row[columns[i]] = value
+                        }</span>
+                        <span class="cov0" title="0">results = append(results, row)</span>
+                }
+        }
+
+        <span class="cov0" title="0">return results, nil</span>
+
+}
+</pre>
+		
+		<pre class="file" id="file9" style="display: none">package govortex
+
+import (
+        "context"
+        "fmt"
+        "net/url"
+)
+
+// PlaceOrder places an order with the Vortex API.
+// It takes a context and a PlaceOrderRequest as input.
+// The request's Validity field is used to determine the ValidityDays and IsAMO values.
+// It returns an OrderResponse and an error.
+func (v *VortexApi) PlaceOrder(ctx context.Context, request PlaceOrderRequest) (*OrderResponse, error) <span class="cov8" title="1">{
+        switch request.Validity </span>{
+        case ValidityTypesFullDay:<span class="cov0" title="0">
+                request.ValidityDays = 1
+                request.IsAMO = false</span>
+        case ValidityTypesImmediateOrCancel:<span class="cov0" title="0">
+                request.ValidityDays = 0
+                request.IsAMO = false</span>
+        default:<span class="cov8" title="1">
+                request.ValidityDays = 1
+                request.IsAMO = true</span>
+        }
+
+        <span class="cov8" title="1">var resp OrderResponse
+        _, err := v.doJson(ctx, "POST", fmt.Sprintf(URIPlaceOrder, "regular"), request, nil, nil, &amp;resp)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;resp, nil</span>
+}
+
+// ModifyOrder modifies an existing order with the Vortex API.
+// It takes a context, a ModifyOrderRequest, an ExchangeTypes value, and an order ID as input.
+// The request's Validity field is used to determine the ValidityDays value.
+// It returns an OrderResponse and an error.
+func (v *VortexApi) ModifyOrder(ctx context.Context, request ModifyOrderRequest, exchange ExchangeTypes, orderID string) (*OrderResponse, error) <span class="cov8" title="1">{
+        // Determine validity_days based on validity type
+        switch request.Validity </span>{
+        case ValidityTypesFullDay:<span class="cov0" title="0">
+                request.ValidityDays = 1</span>
+        case ValidityTypesImmediateOrCancel:<span class="cov0" title="0">
+                request.ValidityDays = 0</span>
+        default:<span class="cov8" title="1">
+                request.ValidityDays = 1</span>
+        }
+        <span class="cov8" title="1">var resp OrderResponse
+        encodedOrderId := url.QueryEscape(orderID)
+        _, err := v.doJson(ctx, "PUT", fmt.Sprintf(URIModifyOrder, "regular", encodedOrderId), request, nil, nil, &amp;resp)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;resp, nil</span>
+}
+
+// CancelOrder cancels an existing order with the Vortex API.
+// It takes a context, an ExchangeTypes value, and an order ID as input.
+// It returns an OrderResponse and an error.
+func (v *VortexApi) CancelOrder(ctx context.Context, orderID string) (*OrderResponse, error) <span class="cov8" title="1">{
+        var resp OrderResponse
+        encodedOrderId := url.QueryEscape(orderID)
+        _, err := v.doJson(ctx, "DELETE", fmt.Sprintf(URIDeleteOrder, "regular", encodedOrderId), nil, nil, nil, &amp;resp)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;resp, nil</span>
+
+}
+
+// Orders retrieves the order book information from the Vortex API.
+// It takes a context, an offset, and a limit as input.
+// It returns an OrderBookResponse and an error.
+func (v *VortexApi) Orders(ctx context.Context) (*OrderBookResponse, error) <span class="cov8" title="1">{
+        var resp OrderBookResponse
+        _, err := v.doJson(ctx, "GET", URIOrderBook, nil, nil, nil, &amp;resp)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;resp, nil</span>
+}
+
+func (v *VortexApi) OrderHistory(ctx context.Context, orderId string) (*OrderHistoryResponse, error) <span class="cov8" title="1">{
+        var resp OrderHistoryResponse
+        encodedOrderId := url.QueryEscape(orderId)
+        _, err := v.doJson(ctx, "GET", fmt.Sprintf(URIOrderHistory, encodedOrderId), nil, nil, nil, &amp;resp)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;resp, nil</span>
+}
+
+func (v *VortexApi) CancelMultipleRegularOrders(ctx context.Context, req MultipleOrderCancelRequest) (*MultipleOrderResponse, error) <span class="cov8" title="1">{
+        var resp MultipleOrderResponse
+        _, err := v.doJson(ctx, "POST", URIMultiCancelrders, req, nil, nil, &amp;resp)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;resp, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file10" style="display: none">package govortex
+
+import (
+        "context"
+)
+
+// GetStrategies retrieves strategies from the Vortex API based on the provided StrategiesRequest.
+// It takes a context and a StrategiesRequest as input.
+// It returns a StrategiesResponse and an error.
+func (v *VortexApi) GetStrategies(ctx context.Context, req StrategiesRequest) (*StrategiesResponse, error) <span class="cov8" title="1">{
+        var resp StrategiesResponse
+        _, err := v.doJson(ctx, "POST", URIStrategies, req, nil, nil, &amp;resp)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;resp, nil</span>
+}
+
+// GetOptionChain retrieves the option chain from the Vortex API based on the provided OptionChainRequest.
+// It takes a context and an OptionChainRequest as input.
+// It returns an OptionChainResponse and an error.
+func (v *VortexApi) GetOptionChain(ctx context.Context, req OptionChainRequest) (*OptionChainResponse, error) <span class="cov8" title="1">{
+        var resp OptionChainResponse
+        _, err := v.doJson(ctx, "POST", URIOptionChain, req, nil, nil, &amp;resp)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;resp, nil</span>
+}
+
+// BuildStrategy initiates the strategy building process with the Vortex API based on the provided StrategyBuilderRequest.
+// It takes a context and a StrategyBuilderRequest as input.
+// It returns a StrategiesResponse and an error.
+func (v *VortexApi) BuildStrategy(ctx context.Context, req StrategyBuilderRequest) (*StrategiesResponse, error) <span class="cov8" title="1">{
+        var resp StrategiesResponse
+        _, err := v.doJson(ctx, "POST", URIBuildStrategies, req, nil, nil, &amp;resp)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;resp, nil</span>
+}
+
+// GetPayoff calculates the payoff for strategies with the Vortex API based on the provided PayoffRequest.
+// It takes a context and a PayoffRequest as input.
+// It returns a PayoffResponse and an error.
+func (v *VortexApi) GetPayoff(ctx context.Context, req PayoffRequest) (*PayoffResponse, error) <span class="cov8" title="1">{
+        var resp PayoffResponse
+        _, err := v.doJson(ctx, "POST", URIPayoffStrategies, req, nil, nil, &amp;resp)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;resp, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file11" style="display: none">package govortex
+
+import (
+        "context"
+        "fmt"
+)
+
+// Tags retrieves the list of tags from the Vortex API.
+// It takes a context as input.
+// It returns a TagsResponse and an error.
+func (v *VortexApi) Tags(ctx context.Context) (*TagsResponse, error) <span class="cov8" title="1">{
+        var resp TagsResponse
+        _, err := v.doJson(ctx, "GET", URITags, nil, nil, nil, &amp;resp)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;resp, nil</span>
+}
+
+// CreateTag creates a new tag with the Vortex API.
+// It takes a context and a TagRequest as input.
+// It returns a TagResponse and an error.
+func (v *VortexApi) CreateTag(ctx context.Context, request TagRequest) (*TagResponse, error) <span class="cov8" title="1">{
+        var resp TagResponse
+        _, err := v.doJson(ctx, "POST", URITags, request, nil, nil, &amp;resp)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;resp, nil</span>
+}
+
+// UpdateTag updates an existing tag with the Vortex API.
+// It takes a context, a tag ID, and a TagRequest as input.
+// It returns a TagResponse and an error.
+func (v *VortexApi) UpdateTag(ctx context.Context, tag_id int, request TagRequest) (*TagResponse, error) <span class="cov8" title="1">{
+        var resp TagResponse
+        _, err := v.doJson(ctx, "PUT", fmt.Sprintf(URITag, tag_id), request, nil, nil, &amp;resp)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;resp, nil</span>
+}
+
+// DeleteTag deletes an existing tag with the Vortex API.
+// It takes a context and a tag ID as input.
+// It returns a TagResponse and an error.
+func (v *VortexApi) DeleteTag(ctx context.Context, tag_id int) (*TagResponse, error) <span class="cov8" title="1">{
+        var resp TagResponse
+        _, err := v.doJson(ctx, "DELETE", fmt.Sprintf(URITag, tag_id), nil, nil, nil, &amp;resp)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;resp, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file12" style="display: none">package govortex
+
+import (
+        "context"
+        "fmt"
+        "net/url"
+)
+
+// Positions retrieves the positions information from the Vortex API.
+// It returns a PositionsResponse and an error.
+func (v *VortexApi) Positions(ctx context.Context) (*PositionResponse, error) <span class="cov8" title="1">{
+        var resp PositionResponse
+        _, err := v.doJson(ctx, "GET", URIPositions, nil, nil, nil, &amp;resp)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;resp, nil</span>
+}
+
+func (v *VortexApi) ConvertPosition(ctx context.Context, req ConvertPositionRequest) (*ConvertPositionResponse, error) <span class="cov8" title="1">{
+        var resp ConvertPositionResponse
+        _, err := v.doJson(ctx, "PUT", URIConvertposition, req, nil, nil, &amp;resp)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;resp, nil</span>
+}
+
+// Holdings retrieves the holdings information from the Vortex API.
+// It returns a HoldingsResponse and an error.
+func (v *VortexApi) Holdings(ctx context.Context) (*HoldingsResponse, error) <span class="cov8" title="1">{
+        var resp HoldingsResponse
+        _, err := v.doJson(ctx, "GET", URIHoldings, nil, nil, nil, &amp;resp)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;resp, nil</span>
+}
+
+// Trades retrieves the trade book information from the Vortex API.
+// It returns a TradeBookResponse and an error.
+func (v *VortexApi) Trades(ctx context.Context, offset int, limit int) (*TradeBookResponse, error) <span class="cov8" title="1">{
+        var resp TradeBookResponse
+        params := url.Values{}
+        params.Add("offset", fmt.Sprintf("%d", offset))
+        params.Add("limit", fmt.Sprintf("%d", limit))
+        _, err := v.doJson(ctx, "GET", URITrades, nil, params, nil, &amp;resp)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;resp, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file13" style="display: none">package govortex
+
+import (
+        "context"
+        "net/http"
+)
+
+// Funds retrieves the funds information from the Vortex API.
+// It returns a FundsResponse containing the funds information and an error if any.
+func (v *VortexApi) Funds(ctx context.Context) (*FundsResponse, error) <span class="cov8" title="1">{
+        var resp FundsResponse
+        _, err := v.doJson(ctx, http.MethodGet, URIFunds, nil, nil, nil, &amp;resp)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;resp, nil</span>
+}
+
+// Banks retrieves a list of banks from the Vortex API.
+// It returns a BanksResponse containing the list of banks and an error if any.
+func (v *VortexApi) Banks(ctx context.Context) (*BanksResponse, error) <span class="cov8" title="1">{
+        var resp BanksResponse
+        _, err := v.doJson(ctx, "GET", URIBanks, nil, nil, nil, &amp;resp)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;resp, nil</span>
+}
+
+// func (v *VortexApi) Brokerage(ctx context.Context) (*BrokerageResponse, error) {
+//         var resp BrokerageResponse
+//         _, err := v.doJson(ctx, "GET", URIBrokerage, nil, nil, nil, &amp;resp)
+//         if err != nil {
+//                 return nil, err
+//         }
+//         return &amp;resp, nil
+// }
+</pre>
+		
+		<pre class="file" id="file14" style="display: none">package govortex
+
+import (
+        "bytes"
+        "context"
+        "encoding/binary"
+        "encoding/json"
+        "fmt"
+        "io"
+        "math"
+        "net/http"
+        "net/url"
+        "strings"
+        "sync"
+        "time"
+
+        "github.com/lib/pq"
+        "nhooyr.io/websocket"
+)
+
+type SocketMessage struct {
+        Type       string             `json:"type"`
+        Data       *SocketMessageData `json:"data,omitempty"`
+        AlertInfo  *AlertInfo         `json:"alert_info,omitempty"`
+        Gtt        *GttInfo           `json:"gtt,omitempty"`
+        ClientCode string             `json:"client_code,omitempty"`
+}
+type AlertProperty string
+type AlertInfo struct {
+        Name           string         `json:"name"`
+        ClientCode     string         `json:"client_code"`
+        Token          int            `json:"token"`
+        Exchange       ExchangeTypes  `json:"exchange"`
+        TriggerValue   float64        `json:"trigger_value"`
+        Property       AlertProperty  `json:"property"`
+        Condition      AlertCondition `json:"condition"`
+        Status         string         `json:"status" `
+        Note           string         `json:"note"`
+        Expiry         time.Time      `json:"expiry"`
+        LastExecutedAt time.Time      `json:"last_executed_at"`
+        IsExecuted     *bool          `json:"is_executed"`
+        CreatedAt      time.Time      `json:"created_at"`
+        UpdatedAt      time.Time      `json:"updated_at"`
+}
+type AlertCondition string
+
+const (
+        AlertConditionLE AlertCondition = "LE"
+        AlertConditionGE AlertCondition = "GE"
+        AlertConditionEQ AlertCondition = "EQ"
+)
+
+const (
+        AlertPropertyLTP      AlertProperty = "LTP"
+        AlertPropertyVOLUME   AlertProperty = "VOLUME"
+        AlertPropertyAVGPRICE AlertProperty = "AVGPRICE"
+)
+
+type GttInfo struct {
+        Id              string           `json:"id"`
+        Token           int              `json:"token"`
+        Exchange        ExchangeTypes    `json:"exchange"`
+        Symbol          string           `json:"symbol"`
+        StrikePrice     float64          `json:"strike_price"`
+        InstrumentName  string           `json:"instrument_name"`
+        ExpiryDate      string           `json:"expiry_date"`
+        OptionType      OptionType       `json:"option_type"`
+        LotSize         int              `json:"lot_size"`
+        TriggerType     GttTriggerType   `json:"trigger_type"`
+        TransactionType TransactionTypes `json:"transaction_type"`
+        TagIds          pq.Int32Array    `json:"tag_ids"`
+        OrderIdentifier string           `json:"order_identifier"`
+        Orders          []GttInfoOrder   `json:"orders"`
+}
+type GttInfoOrder struct {
+        Id           uint           `json:"id"`
+        Product      ProductTypes   `json:"product"`
+        Variety      VarietyTypes   `json:"variety"`
+        Price        *float64       `json:"price"`
+        TriggerPrice *float64       `json:"trigger_price"`
+        Quantity     int            `json:"quantity"`
+        Status       GttOrderStatus `json:"status"`
+        CreatedAt    time.Time      `json:"created_at"`
+        UpdatedAt    time.Time      `json:"updated_at"`
+        TrigerredAt  time.Time      `json:"trigerred_at"`
+}
+
+type SocketMessageData struct {
+        OrderId                    string           `json:"order_id"`
+        MiddlewareOrderId          uint             `json:"middleware_order_id"`
+        TriggersGtt                bool             `json:"triggers_gtt"`
+        OrderNumber                string           `json:"order_number"`
+        AmoOrderId                 string           `json:"amo_order_id"`
+        PlacedBy                   string           `json:"placed_by"`
+        ModifiedBy                 string           `json:"modified_by"`
+        Status                     OrderStatus      `json:"status"`
+        StatusMessage              string           `json:"status_message"`
+        Symbol                     string           `json:"symbol"`
+        Series                     string           `json:"series"`
+        InstrumentName             string           `json:"instrument_name"`
+        Token                      int              `json:"token"`
+        Exchange                   ExchangeTypes    `json:"exchange"`
+        ExpiryDate                 string           `json:"expiry_date"`
+        StrikePrice                float32          `json:"strike_price"`
+        OptionType                 string           `json:"option_type"`
+        TransactionType            TransactionTypes `json:"transaction_type"`
+        Validity                   ValidityTypes    `json:"validity"`
+        ValidityDays               int              `json:"validity_days"`
+        Product                    ProductTypes     `json:"product"` //Intraday, Delivery or MTF
+        Variety                    VarietyTypes     `json:"variety"` //regular , SL , SL-MKT,amo etc
+        DisclosedQuantity          int              `json:"disclosed_quantity"`
+        DisclosedQuantityRemaining int              `json:"disclosed_quantity_remaining"`
+        TotalQuantity              int              `json:"total_quantity"`
+        PendingQuantity            int              `json:"pending_quantity"`
+        TradedQuantity             int              `json:"traded_quantity"`
+        ThisTradeQuantity          int              `json:"this_trade_quantity,omitempty"`
+        MarketType                 string           `json:"market_type"`
+        OrderPrice                 float32          `json:"order_price"`
+        TriggerPrice               float32          `json:"trigger_price"`
+        CoverTriggerPrice          float32          `json:"cover_trigger_price"`
+        TradedPrice                float32          `json:"traded_price"`
+        IsAmo                      bool             `json:"is_amo"`
+        OrderIdentifier            string           `json:"order_identifier"`
+        InternalRemarks            string           `json:"internal_remarks"`
+        OrderCreatedAt             string           `json:"order_created_at"`
+        OrderUpdatedAt             string           `json:"order_updated_at"`
+        TradeNumber                string           `json:"trade_number,omitempty"`
+        TradeTime                  string           `json:"trade_time,omitempty"`
+        MarketSegmentId            int              `json:"market_segment_id"`
+        GtdOrderStatus             OrderStatus      `json:"gtd_order_status"`
+        SequenceNumber             int              `json:"sequence_number"`
+}
+
+type packet struct {
+        Exchange          [10]byte `json:"exchange"`
+        Token             int32    `json:"token"`
+        LastTradePrice    float64  `json:"last_trade_price"`
+        LastTradeTime     int32    `json:"last_trade_time"`
+        OpenPrice         float64  `json:"open_price"`
+        HighPrice         float64  `json:"high_price"`
+        LowPrice          float64  `json:"low_price"`
+        ClosePrice        float64  `json:"close_price"`
+        Volume            int32    `json:"volume"`
+        LastUpdateTime    int32    `json:"last_update_time,omitempty"`
+        LastTradeQuantity int32    `json:"last_trade_quantity,omitempty"`
+        AverageTradePrice float64  `json:"average_trade_price,omitempty"`
+        TotalBuyQuantity  int64    `json:"total_buy_quantity,omitempty"`
+        TotalSellQuantity int64    `json:"total_sell_quantity,omitempty"`
+        OpenInterest      int32    `json:"open_interest,omitempty"`
+        Depth             struct {
+                Buy [5]struct {
+                        Price    float64 `json:"price,omitempty"`
+                        Quantity int32   `json:"quantity,omitempty"`
+                        Orders   int32   `json:"orders,omitempty"`
+                } `json:"buy,omitempty"`
+                Sell [5]struct {
+                        Price    float64 `json:"price,omitempty"`
+                        Quantity int32   `json:"quantity,omitempty"`
+                        Orders   int32   `json:"orders,omitempty"`
+                } `json:"sell,omitempty"`
+        } `json:"depth,omitempty"`
+        DPRHigh int32 `json:"dpr_high,omitempty"`
+        DPRLow  int32 `json:"dpr_low,omitempty"`
+}
+
+func (p *packet) transformToQuote() *FullQuoteData <span class="cov0" title="0">{
+        q := FullQuoteData{
+                Exchange:          strings.TrimRight(string(p.Exchange[:]), string([]rune{0})),
+                Token:             int(p.Token),
+                LastTradeTime:     int(p.LastTradeTime),
+                LastUpdateTime:    int(p.LastUpdateTime),
+                LastTradePrice:    p.LastTradePrice,
+                Volume:            int(p.Volume),
+                AverageTradePrice: p.AverageTradePrice,
+                TotalBuyQuantity:  p.TotalBuyQuantity,
+                TotalSellQuantity: p.TotalSellQuantity,
+                OpenInterest:      int(p.OpenInterest),
+                OpenPrice:         p.OpenPrice,
+                HighPrice:         p.HighPrice,
+                LowPrice:          p.LowPrice,
+                ClosePrice:        p.ClosePrice,
+                LastTradeQuantity: int(p.LastTradeQuantity),
+                Depth: &amp;QuoteDepth{
+                        Buy: []QuoteEntry{
+                                {
+                                        Quantity: int(p.Depth.Buy[0].Quantity),
+                                        Price:    p.Depth.Buy[0].Price,
+                                        Orders:   int(p.Depth.Buy[0].Orders),
+                                },
+                                {
+                                        Quantity: int(p.Depth.Buy[1].Quantity),
+                                        Price:    p.Depth.Buy[1].Price,
+                                        Orders:   int(p.Depth.Buy[1].Orders),
+                                },
+                                {
+                                        Quantity: int(p.Depth.Buy[2].Quantity),
+                                        Price:    p.Depth.Buy[2].Price,
+                                        Orders:   int(p.Depth.Buy[2].Orders),
+                                },
+                                {
+                                        Quantity: int(p.Depth.Buy[3].Quantity),
+                                        Price:    p.Depth.Buy[3].Price,
+                                        Orders:   int(p.Depth.Buy[3].Orders),
+                                },
+                                {
+                                        Quantity: int(p.Depth.Buy[4].Quantity),
+                                        Price:    p.Depth.Buy[4].Price,
+                                        Orders:   int(p.Depth.Buy[4].Orders),
+                                },
+                        },
+                        Sell: []QuoteEntry{
+                                {
+                                        Quantity: int(p.Depth.Sell[0].Quantity),
+                                        Price:    p.Depth.Sell[0].Price,
+                                        Orders:   int(p.Depth.Sell[0].Orders),
+                                },
+                                {
+                                        Quantity: int(p.Depth.Sell[1].Quantity),
+                                        Price:    p.Depth.Sell[1].Price,
+                                        Orders:   int(p.Depth.Sell[1].Orders),
+                                },
+                                {
+                                        Quantity: int(p.Depth.Sell[2].Quantity),
+                                        Price:    p.Depth.Sell[2].Price,
+                                        Orders:   int(p.Depth.Sell[2].Orders),
+                                },
+                                {
+                                        Quantity: int(p.Depth.Sell[3].Quantity),
+                                        Price:    p.Depth.Sell[3].Price,
+                                        Orders:   int(p.Depth.Sell[3].Orders),
+                                },
+                                {
+                                        Quantity: int(p.Depth.Sell[4].Quantity),
+                                        Price:    p.Depth.Sell[4].Price,
+                                        Orders:   int(p.Depth.Sell[4].Orders),
+                                },
+                        },
+                },
+                DPRHigh: float64(p.DPRHigh),
+                DPRLow:  float64(p.DPRLow),
+        }
+        return &amp;q
+}</span>
+
+type Wire struct {
+        Conn                *websocket.Conn
+        accessToken         string
+        url                 url.URL
+        callbacks           callbacks
+        autoreconnect       bool
+        reconnectMaxDelay   time.Duration
+        reconnectMaxRetries int
+        connectTimeout      time.Duration
+
+        reconnectAttempt int
+        subscriptions    map[ExchangeTypes]map[int]QuoteModes
+        serverContext    context.Context
+        cancel           context.CancelFunc
+}
+type callbacks struct {
+        onPriceUpdate func(*FullQuoteData)
+        onMessage     func(int, []byte)
+        onNoReconnect func(int)
+        onReconnect   func(int, time.Duration)
+        onConnect     func()
+        onClose       func(int, string)
+        onError       func(error)
+        onOrderUpdate func(SocketMessage)
+}
+
+const (
+        defaultReconnectMaxAttempts               = 300
+        reconnectMinDelay           time.Duration = 5000 * time.Millisecond
+        defaultReconnectMaxDelay    time.Duration = 60000 * time.Millisecond
+        defaultConnectTimeout       time.Duration = 7000 * time.Millisecond
+        connectionCheckInterval     time.Duration = 2000 * time.Millisecond
+        dataTimeoutInterval         time.Duration = 60 * time.Second
+)
+
+var (
+        websocketUrl = url.URL{Scheme: "wss", Host: "wire.asthatrade.com", Path: "ws"}
+)
+
+// Default method to create a new instance of Wire which can be used to get price updates and order updates
+func InitializeWire(accessToken string, wire *Wire) error <span class="cov0" title="0">{
+        wire.accessToken = accessToken
+        wire.url = websocketUrl
+        wire.autoreconnect = true
+        wire.reconnectMaxDelay = defaultReconnectMaxDelay
+        wire.reconnectMaxRetries = defaultReconnectMaxAttempts
+        wire.connectTimeout = defaultConnectTimeout
+        wire.subscriptions = map[ExchangeTypes]map[int]QuoteModes{}
+        return nil
+}</span>
+
+// Use this function to set new url for websocket connection
+func (t *Wire) SetRootURL(u url.URL) <span class="cov0" title="0">{
+        t.url = u
+}</span>
+
+// Use this function to change access token
+func (t *Wire) SetAccessToken(accessToken string) <span class="cov0" title="0">{
+        t.accessToken = accessToken
+}</span>
+
+// Use this function to change connection timeout value. Dafault: 7 seconds
+func (t *Wire) SetConnectTimeout(val time.Duration) <span class="cov0" title="0">{
+        t.connectTimeout = val
+}</span>
+
+// Use this function to change auto reconnection setting. Default: true
+func (t *Wire) SetAutoReconnect(val bool) <span class="cov0" title="0">{
+        t.autoreconnect = val
+}</span>
+
+// Use this function to change max reconnection delay. Default: 60 seconds
+func (t *Wire) SetReconnectMaxDelay(val time.Duration) error <span class="cov0" title="0">{
+        if val &gt; reconnectMinDelay </span><span class="cov0" title="0">{
+                return fmt.Errorf("ReconnectMaxDelay can't be less than %fms", reconnectMinDelay.Seconds()*1000)
+        }</span>
+
+        <span class="cov0" title="0">t.reconnectMaxDelay = val
+        return nil</span>
+}
+
+// Use this function to change max connection retries. Default: 300
+func (t *Wire) SetReconnectMaxRetries(val int) <span class="cov0" title="0">{
+        t.reconnectMaxRetries = val
+}</span>
+
+// Set a function to receive update whenever the socket is connected
+func (t *Wire) OnConnect(f func()) <span class="cov0" title="0">{
+        t.callbacks.onConnect = f
+}</span>
+
+// Set a function to receive update whenever there is an error
+func (t *Wire) OnError(f func(err error)) <span class="cov0" title="0">{
+        t.callbacks.onError = f
+}</span>
+
+// Set a function to receive update whenever the socket closes
+func (t *Wire) OnClose(f func(code int, reason string)) <span class="cov0" title="0">{
+        t.callbacks.onClose = f
+}</span>
+
+// Set a function to receive raw message
+func (t *Wire) OnMessage(f func(messageType int, message []byte)) <span class="cov0" title="0">{
+        t.callbacks.onMessage = f
+}</span>
+
+// Set a function to receive update whenever the socket reconnects
+func (t *Wire) OnReconnect(f func(attempt int, delay time.Duration)) <span class="cov0" title="0">{
+        t.callbacks.onReconnect = f
+}</span>
+
+func (t *Wire) OnNoReconnect(f func(attempt int)) <span class="cov0" title="0">{
+        t.callbacks.onNoReconnect = f
+}</span>
+
+// Set a function to receive Price Updates
+func (t *Wire) OnPriceUpdate(f func(*FullQuoteData)) <span class="cov0" title="0">{
+        t.callbacks.onPriceUpdate = f
+}</span>
+
+// Set a function to receive Order Updates
+func (t *Wire) OnOrderUpdate(f func(order SocketMessage)) <span class="cov0" title="0">{
+        t.callbacks.onOrderUpdate = f
+}</span>
+func (t *Wire) triggerNoReconnect(attempt int) <span class="cov0" title="0">{
+        if t.callbacks.onNoReconnect != nil </span><span class="cov0" title="0">{
+                t.callbacks.onNoReconnect(attempt)
+        }</span>
+}
+func (t *Wire) triggerMessage(messageType int, message []byte) <span class="cov0" title="0">{
+        if t.callbacks.onMessage != nil </span><span class="cov0" title="0">{
+                t.callbacks.onMessage(messageType, message)
+        }</span>
+}
+func (t *Wire) triggerReconnect(attempt int, delay time.Duration) <span class="cov0" title="0">{
+        if t.callbacks.onReconnect != nil </span><span class="cov0" title="0">{
+                t.callbacks.onReconnect(attempt, delay)
+        }</span>
+}
+func (t *Wire) triggerError(err error) <span class="cov0" title="0">{
+        if t.callbacks.onError != nil </span><span class="cov0" title="0">{
+                t.callbacks.onError(err)
+        }</span>
+}
+func (t *Wire) triggerConnect() <span class="cov0" title="0">{
+        if t.callbacks.onConnect != nil </span><span class="cov0" title="0">{
+                t.callbacks.onConnect()
+        }</span>
+}
+func (t *Wire) triggerOrderUpdate(msg SocketMessage) <span class="cov0" title="0">{
+        if t.callbacks.onOrderUpdate != nil </span><span class="cov0" title="0">{
+                t.callbacks.onOrderUpdate(msg)
+        }</span>
+}
+
+func (t *Wire) checkConnection(ctx context.Context, wg *sync.WaitGroup) <span class="cov0" title="0">{
+        defer wg.Done()
+        for </span><span class="cov0" title="0">{
+                select </span>{
+                case &lt;-ctx.Done():<span class="cov0" title="0">
+                        return</span>
+                default:<span class="cov0" title="0">
+                        // Sleep before doing next check
+                        time.Sleep(connectionCheckInterval)
+
+                        pingContext, cancelFunc := context.WithTimeout(ctx, 1*time.Second)
+                        defer cancelFunc()
+                        if err := t.Conn.Ping(pingContext); err != nil </span><span class="cov0" title="0">{
+                                if t.Conn != nil </span><span class="cov0" title="0">{
+                                        t.Conn.Close(websocket.StatusGoingAway, "ping not received in the time interval")
+                                }</span>
+                                <span class="cov0" title="0">t.reconnectAttempt++
+                                return</span>
+                        }
+
+                        // // If last ping time is greater then timeout interval then close the
+                        // // existing connection and reconnect
+                        // if time.Since(t.lastPingTime) &gt; dataTimeoutInterval {
+                        //         // Close the current connection without waiting for close frame
+                        //         if t.Conn != nil {
+                        //                 t.Conn.Close(websocket.StatusGoingAway, "ping not received in the time interval")
+                        //         }
+
+                        //         // Increase reconnect attempt for next reconnection
+                        //         t.reconnectAttempt++
+                        //         // Mark it as done in wait group
+                        //         return
+                        // }
+                }
+        }
+}
+
+func (t *Wire) Resubscribe() {<span class="cov0" title="0">
+        // TODO: Write resubscribe logic
+}</span>
+
+// Call this function to start the websocket server
+func (t *Wire) Serve() <span class="cov0" title="0">{
+        t.ServeWithContext(context.Background())
+}</span>
+
+// Call this function to start the websocket server with a context
+func (t *Wire) ServeWithContext(ctx context.Context) <span class="cov0" title="0">{
+        ctx, cancel := context.WithCancel(ctx)
+        t.serverContext = ctx
+        t.cancel = cancel
+
+        for </span><span class="cov0" title="0">{
+                select </span>{
+                case &lt;-ctx.Done():<span class="cov0" title="0">
+                        return</span>
+                default:<span class="cov0" title="0">
+                        // If reconnect attempt exceeds max then close the loop
+                        if t.reconnectAttempt &gt; t.reconnectMaxRetries </span><span class="cov0" title="0">{
+                                t.triggerNoReconnect(t.reconnectAttempt)
+                                return
+                        }</span>
+
+                        // If its a reconnect then wait exponentially based on reconnect attempt
+                        <span class="cov0" title="0">if t.reconnectAttempt &gt; 0 </span><span class="cov0" title="0">{
+                                nextDelay := time.Duration(math.Pow(2, float64(t.reconnectAttempt))) * time.Second
+                                if nextDelay &gt; t.reconnectMaxDelay || nextDelay &lt;= 0 </span><span class="cov0" title="0">{
+                                        nextDelay = t.reconnectMaxDelay
+                                }</span>
+
+                                <span class="cov0" title="0">t.triggerReconnect(t.reconnectAttempt, nextDelay)
+
+                                time.Sleep(nextDelay)
+
+                                // Close the previous connection if exists
+                                if t.Conn != nil </span><span class="cov0" title="0">{
+                                        t.Conn.Close(websocket.StatusGoingAway, "reconnecting")
+                                }</span>
+                        }
+
+                        // Prepare ticker URL with required params.
+                        <span class="cov0" title="0">q := t.url.Query()
+                        q.Set("auth_token", t.accessToken)
+                        t.url.RawQuery = q.Encode()
+                        conn, _, err := websocket.Dial(ctx, t.url.String(), &amp;websocket.DialOptions{HTTPClient: &amp;http.Client{
+                                Timeout: t.connectTimeout,
+                        }})
+                        if err != nil </span><span class="cov0" title="0">{
+                                t.triggerError(err)
+
+                                // If auto reconnect is enabled then try reconneting else return error
+                                if t.autoreconnect </span><span class="cov0" title="0">{
+                                        t.reconnectAttempt++
+                                        continue</span>
+                                }
+                        }
+
+                        // Close the connection when its done.
+                        <span class="cov0" title="0">defer func() </span><span class="cov0" title="0">{
+                                if t.Conn != nil </span><span class="cov0" title="0">{
+                                        t.Conn.Close(websocket.StatusNormalClosure, "bye")
+                                }</span>
+                        }()
+
+                        // Assign the current connection to the instance.
+                        <span class="cov0" title="0">t.Conn = conn
+
+                        // Trigger connect callback.
+                        t.triggerConnect()
+
+                        // Resubscribe to stored tokens
+                        if t.reconnectAttempt &gt; 0 </span><span class="cov0" title="0">{
+                                t.Resubscribe()
+                        }</span>
+
+                        // Reset auto reconnect vars
+                        <span class="cov0" title="0">t.reconnectAttempt = 0
+
+                        var wg sync.WaitGroup
+
+                        // Receive ticker data in a go routine.
+                        wg.Add(1)
+                        go t.readMessage(ctx, &amp;wg)
+
+                        // Run watcher to check last ping time and reconnect if required
+                        if t.autoreconnect </span><span class="cov0" title="0">{
+                                wg.Add(1)
+                                go t.checkConnection(ctx, &amp;wg)
+                        }</span>
+
+                        // Wait for go routines to finish before doing next reconnect
+                        <span class="cov0" title="0">wg.Wait()</span>
+                }
+        }
+}
+
+// readMessage reads the data in a loop.
+func (t *Wire) readMessage(ctx context.Context, wg *sync.WaitGroup) <span class="cov0" title="0">{
+        defer wg.Done()
+        for </span><span class="cov0" title="0">{
+                select </span>{
+                case &lt;-ctx.Done():<span class="cov0" title="0">
+                        return</span>
+                default:<span class="cov0" title="0">
+                        // mType, msg, err := t.Conn.Read(ctx)
+
+                        mType, msgReader, err := t.Conn.Reader(ctx)
+                        if err != nil </span><span class="cov0" title="0">{
+                                t.triggerError(fmt.Errorf("Error reading data: %v", err))
+                                return
+                        }</span>
+
+                        <span class="cov0" title="0">msg, err := io.ReadAll(msgReader)
+                        if err != nil </span><span class="cov0" title="0">{
+                                t.triggerError(fmt.Errorf("Error reading data from reader: %v", err))
+                                return
+                        }</span>
+                        // Trigger message.
+
+                        <span class="cov0" title="0">t.triggerMessage(int(mType), msg)
+
+                        // If binary message then parse and send tick.
+                        if mType == websocket.MessageBinary </span><span class="cov0" title="0">{
+                                ticks, err := t.parseBinary(msg)
+                                if err != nil </span><span class="cov0" title="0">{
+                                        t.triggerError(fmt.Errorf("Error parsing data received: %v", err))
+                                }</span>
+
+                                // Trigger individual tick.
+                                <span class="cov0" title="0">for _, tick := range ticks </span><span class="cov0" title="0">{
+                                        t.triggerPriceUpdate(tick)
+                                }</span>
+                        } else<span class="cov0" title="0"> if mType == websocket.MessageText </span><span class="cov0" title="0">{
+                                t.processTextMessage(msg)
+                        }</span>
+                }
+        }
+}
+func (t *Wire) parseBinary(inp []byte) ([]*FullQuoteData, error) <span class="cov0" title="0">{
+        pkts := t.splitPackets(inp)
+        var ticks []*FullQuoteData
+
+        for _, pkt := range pkts </span><span class="cov0" title="0">{
+                tick, err := parsePacket(pkt)
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+
+                <span class="cov0" title="0">ticks = append(ticks, tick)</span>
+        }
+
+        <span class="cov0" title="0">return ticks, nil</span>
+}
+
+func (t *Wire) splitPackets(inp []byte) [][]byte <span class="cov0" title="0">{
+        var pkts [][]byte
+        if len(inp) &lt; 2 </span><span class="cov0" title="0">{
+                return pkts
+        }</span>
+
+        <span class="cov0" title="0">pktLen := binary.LittleEndian.Uint16(inp[0:2])
+
+        j := 2
+        for i := 0; i &lt; int(pktLen); i++ </span><span class="cov0" title="0">{
+                pLen := binary.LittleEndian.Uint16(inp[j : j+2])
+                pkts = append(pkts, inp[j+2:j+2+int(pLen)])
+                j = j + 2 + int(pLen)
+        }</span>
+
+        <span class="cov0" title="0">return pkts</span>
+}
+
+func parsePacket(buf []byte) (*FullQuoteData, error) <span class="cov0" title="0">{
+        // if len(buf) != binary.Size(Quote{}) {
+        //         return nil, errors.New("invalid packet length " + fmt.Sprintf("%d , %d", binary.Size(models.NatPacket{}), len(buf)))
+        // }
+        requiredLength := 266
+        if len(buf) &lt; requiredLength </span><span class="cov0" title="0">{
+                // Calculate the number of zeros to add
+                paddingLength := requiredLength - len(buf)
+                padding := make([]byte, paddingLength)
+
+                // Pad the slice with zeros
+                buf = append(buf, padding...)
+        }</span>
+        <span class="cov0" title="0">packet := &amp;packet{}
+
+        err := binary.Read(bytes.NewReader(buf), binary.LittleEndian, packet)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">return packet.transformToQuote(), nil</span>
+}
+
+func (t *Wire) triggerPriceUpdate(tick *FullQuoteData) <span class="cov0" title="0">{
+        if t.callbacks.onPriceUpdate != nil </span><span class="cov0" title="0">{
+                t.callbacks.onPriceUpdate(tick)
+        }</span>
+}
+
+func (t *Wire) processTextMessage(inp []byte) <span class="cov0" title="0">{
+        var msg SocketMessage
+        if err := json.Unmarshal(inp, &amp;msg); err != nil </span><span class="cov0" title="0">{
+                // May be error should be triggered
+                return
+        }</span>
+        <span class="cov0" title="0">t.triggerOrderUpdate(msg)</span>
+}
+func (t *Wire) Close() error <span class="cov0" title="0">{
+        return t.Conn.Close(websocket.StatusGoingAway, "close called")
+}</span>
+
+// Stop the wire instance and all the goroutines it has spawned.
+func (t *Wire) Stop() <span class="cov0" title="0">{
+        if t.cancel != nil </span><span class="cov0" title="0">{
+                t.cancel()
+        }</span>
+}
+
+// Call this function to subscribe to an instrument
+func (t *Wire) Subscribe(exchange ExchangeTypes, token int, mode QuoteModes) <span class="cov0" title="0">{
+        ctx, cancelFunc := context.WithTimeout(t.serverContext, 3*time.Second)
+        defer cancelFunc()
+        message := map[string]interface{}{
+                "message_type": "subscribe",
+                "exchange":     string(exchange),
+                "token":        token,
+                "mode":         string(mode),
+        }
+        aa, _ := json.Marshal(message)
+        t.Conn.Write(ctx, websocket.MessageText, aa)
+}</span>
+
+// Call this function to unsubscribe an instrument
+func (t *Wire) Unsubscribe(exchange ExchangeTypes, token int, mode QuoteModes) <span class="cov0" title="0">{
+        ctx, cancelFunc := context.WithTimeout(t.serverContext, 3*time.Second)
+        defer cancelFunc()
+        message := map[string]interface{}{
+                "message_type": "unsubscribe",
+                "exchange":     string(exchange),
+                "token":        token,
+        }
+        aa, _ := json.Marshal(message)
+        t.Conn.Write(ctx, websocket.MessageText, aa)
+}</span>
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

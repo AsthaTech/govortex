@@ -31,6 +31,10 @@ func (v *VortexApi) Login(ctx context.Context, clientCode string, password strin
 	return &resp, nil
 }
 
+// ExchangeToken exchanges auth token received for the access_token from the Vortex API.
+// It takes a context and auth_token as input.
+// If the login is successful, the method updates the accessToken field of the VortexApi instance.
+// It returns the LoginResponse and an error.
 func (v *VortexApi) ExchangeToken(ctx context.Context, auth_token string) (*LoginResponse, error) {
 	request := ExchangeAuthTokenRequest{
 		Token:         auth_token,
@@ -43,6 +47,7 @@ func (v *VortexApi) ExchangeToken(ctx context.Context, auth_token string) (*Logi
 	if err != nil {
 		return nil, err
 	}
+	v.AccessToken = resp.Data.AccessToken
 	return &resp, nil
 }
 
@@ -53,11 +58,15 @@ func getSha256(s string) string {
 	return fmt.Sprintf("%x", bs)
 }
 
-func (v *VortexApi) Logout(ctx context.Context) (*map[string]interface{}, error) {
-	var resp map[string]interface{}
-	_, err := v.doJson(ctx, "POST", URISession, nil, nil, nil, &resp)
+// Logout logs the user out from the Vortex API and the access token is then no longer useful.
+// It takes a context as input.
+// It returns the LogoutResponse and an error.
+func (v *VortexApi) Logout(ctx context.Context) (*LogoutResponse, error) {
+	var resp LogoutResponse
+	_, err := v.doJson(ctx, "DELETE", URISession, nil, nil, nil, &resp)
 	if err != nil {
 		return nil, err
 	}
+	v.AccessToken = ""
 	return &resp, nil
 }

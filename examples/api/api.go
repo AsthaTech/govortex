@@ -15,6 +15,7 @@ func main() {
 	var client govortex.VortexApi
 	govortex.InitializeVortexApi(applicationId, apiKey, &client)
 	ctx := context.Background()
+
 	client.Login(ctx, "clientCode", "password", "totp")
 	// Access token is automatically set upon successful login call
 

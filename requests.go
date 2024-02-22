@@ -55,6 +55,19 @@ type OrderMarginRequest struct {
 	Mode            MarginModes      `json:"mode"`             // Required: Mode of margin calculation.
 }
 
+type BasketMarginOrder struct {
+	Exchange        ExchangeTypes    `json:"exchange"`         // Required: Exchange type.
+	Token           int              `json:"token"`            // Required: Token of the underlying instrument.
+	TransactionType TransactionTypes `json:"transaction_type"` // Required: Type of transaction.
+	Product         ProductTypes     `json:"product"`          // Required: Type of product.
+	Variety         VarietyTypes     `json:"variety"`          // Required: Type of variety.
+	Quantity        int              `json:"quantity"`         // Required: Quantity of the order.
+	Price           float64          `json:"price"`            // Required: Price of the order.
+}
+type BasketMarginRequest struct {
+	Orders []BasketMarginOrder `json:"orders"`
+}
+
 // ConvertPositionRequest represents a request to convert a position.
 type ConvertPositionRequest struct {
 	Exchange        ExchangeTypes    `json:"exchange"`         // Required: Exchange type.

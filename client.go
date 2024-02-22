@@ -37,15 +37,15 @@ const (
 	URIConvertposition string = "/trading/portfolio/positions"
 	URIHoldings        string = "/trading/portfolio/holdings"
 
-	URIFunds     string = "/trading/user/funds"
-	URIBanks     string = "/trading/user/banks"
-	URIBrokerage string = "/trading/user/brokerage"
+	URIFunds     string = "/user/funds"
+	URIBanks     string = "/user/profile/banks"
+	URIBrokerage string = "/user/profile/brokerage"
 
-	URIWithdrawal  string = "/user/funds/withdrawal"
-	URIOrderMargin string = "/margins/order"
-	URIOrderBasket string = "/margins/basket"
-	URIQuotes      string = "/data/quote"
-	URIHistory     string = "/data/history"
+	URIWithdrawal   string = "/user/funds/withdrawal"
+	URIOrderMargin  string = "/margins/order"
+	URIBasketMargin string = "/margins/basket"
+	URIQuotes       string = "/data/quote"
+	URIHistory      string = "/data/history"
 
 	URIOptionChain string = "/strategies/option_chain"
 
@@ -117,6 +117,5 @@ func (v *VortexApi) doJson(ctx context.Context, method, uri string, body interfa
 	if v.AccessToken != "" {
 		headers.Add("Authorization", "Bearer "+v.AccessToken)
 	}
-	fmt.Println("URL:", v.baseURL+uri)
 	return v.htt.doJSON(ctx, method, v.baseURL+uri, body, params, headers, obj)
 }
