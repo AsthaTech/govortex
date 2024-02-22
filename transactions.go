@@ -17,7 +17,7 @@ func (v *VortexApi) Positions(ctx context.Context) (*PositionResponse, error) {
 	return &resp, nil
 }
 
-func (v *VortexApi) ConvertPosition(ctx context.Context, req ConvertPositionObject) (*ConvertPositionResponse, error) {
+func (v *VortexApi) ConvertPosition(ctx context.Context, req ConvertPositionRequest) (*ConvertPositionResponse, error) {
 	var resp ConvertPositionResponse
 	_, err := v.doJson(ctx, "PUT", URIConvertposition, req, nil, nil, &resp)
 	if err != nil {

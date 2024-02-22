@@ -4,23 +4,46 @@ package govortex // import "github.com/AsthaTech/govortex"
 CONSTANTS
 
 const (
-	URILogin        string = "/user/login"
-	URIInstruments  string = "/data/instruments"
-	URIPlaceOrder   string = "/orders/%s"       // "/orders/regular"
-	URIModifyOrder  string = "/orders/%s/%s/%s" //"/orders/regular/{exchange}/{order_id}"
-	URIDeleterOrder string = "/orders/%s/%s/%s" //"/orders/regular/{exchange}/{order_id}"
-	URIOrderBook    string = "/orders"          //"/orders?limit={limit}&offset={offset}"
-	URIOrderHistory string = "/orders/%s"       //"/orders/{order_id}"
-	URITrades       string = "/trades"
+	URILogin               string = "/user/login"
+	URIInstruments         string = "/data/instruments"
+	URIPlaceOrder          string = "/trading/orders/%s"              //"/trading/orders/regular"
+	URIModifyOrder         string = "/trading/orders/%s/%s"           //"/trading/orders/{{order_type}}/{order_id}"
+	URIModifyOrderTags     string = "/trading/orders/%s/%s/tags"      //"/trading/orders/{{order_type}}/{order_id}/tags"
+	URIDeleteOrder         string = "/trading/orders/%s/%s"           //"/orders/{{order_type}}/{order_id}"
+	URIDeleteMultipleOrder string = "/trading/orders/%s/multi_delete" //"/orders/{{order_type}}/{order_id}"
+	URIGttOrderBook        string = "/trading/orders/gtt"             //"/orders/gtt"
+	URIOrderBook           string = "/trading/orders"                 //"/orders"
+	URIOrderHistory        string = "/trading/orders/%s"              //"/orders/{order_id}"
+	URITrades              string = "/trading/trades"
 
-	URIPositions       string = "/portfolio/positions"
-	URIConvertposition string = "/portfolio/positions"
-	URIHoldings        string = "/portfolio/holdings"
+	URIPositions       string = "/trading/portfolio/positions"
+	URIConvertposition string = "/trading/portfolio/positions"
+	URIHoldings        string = "/trading/portfolio/holdings"
 
-	URIFunds       string = "/user/funds"
+	URIFunds     string = "/trading/user/funds"
+	URIBanks     string = "/trading/user/banks"
+	URIBrokerage string = "/trading/user/brokerage"
+
+	URIWithdrawal  string = "/user/funds/withdrawal"
 	URIOrderMargin string = "/margins/order"
+	URIOrderBasket string = "/margins/basket"
 	URIQuotes      string = "/data/quote"
 	URIHistory     string = "/data/history"
+
+	URIOptionChain string = "/strategies/option_chain"
+
+	URIStrategies       string = "/strategies"
+	URIBuildStrategies  string = "/strategies/build"
+	URIPayoffStrategies string = "/strategies/payoff"
+
+	URITradeReport           string = "/reports/trades/%s?from_date=%s&to_date=%s"
+	URITurnoverSummaryReport string = "/reports/turnover/summary/%s?from_date=%s&to_date=%s"
+	URITurnoverDetailsReport string = "/reports/turnover/details/%s?from_date=%s&to_date=%s"
+	URIPnLReport             string = "/reports/pnl/%s?from_date=%s&to_date=%s"
+	URIMTFInterestReport     string = "/reports/mtf_interest/%s?from_date=%s&to_date=%s"
+
+	URITags string = "/reports/tags"
+	URITag  string = "/reports/tags/%d"
 )
     Constants for the API endpoints
 
@@ -55,18 +78,35 @@ func NewError(etype string, message string, data interface{}) error
 
 TYPES
 
-type ConvertPositionObject struct {
-	Exchange        ExchangeTypes    `json:"exchange"`
-	Token           int              `json:"token"`
-	TransactionType TransactionTypes `json:"transaction_type"`
-	OldProductType  ProductTypes     `json:"old_product_type"`
-	NewProductType  ProductTypes     `json:"new_product_type"`
+type CancelIcebergOrderResponse struct {
+	Message string `json:"message"`
+	Status  string `json:"status"`
 }
+
+type ConvertPositionRequest struct {
+	Exchange        ExchangeTypes    `json:"exchange"`         // Required: Exchange type.
+	Token           int              `json:"token"`            // Required: Token of the underlying instrument.
+	TransactionType TransactionTypes `json:"transaction_type"` // Required: Type of transaction.
+	Quantity        int              `json:"quantity"`         // Required: Quantity of the position to convert.
+	OldProductType  ProductTypes     `json:"old_product"`      // Required: Old product type of the position.
+	NewProductType  ProductTypes     `json:"new_product"`      // Required: New product type to convert the position to.
+}
+    ConvertPositionRequest represents a request to convert a position.
 
 type ConvertPositionResponse struct {
 	Status  string `json:"status"`
 	Code    string `json:"code"`
 	Message string `json:"message"`
+}
+
+type DateOptionData struct {
+	StrikePrice float64        `json:"strike_price"`
+	IV          float64        `json:"iv"`
+	Theta       float64        `json:"theta"`
+	Vega        float64        `json:"vega"`
+	Gamma       float64        `json:"gamma"`
+	CE          StockWithGreek `json:"CE"`
+	PE          StockWithGreek `json:"PE"`
 }
 
 type Error struct {
@@ -80,10 +120,31 @@ type Error struct {
 func (e Error) Error() string
     This makes Error a valid Go error type.
 
+type ExchangeDetail struct {
+	Token    int           `json:"token"`
+	Exchange ExchangeTypes `json:"exchange"`
+	Symbol   string        `json:"symbol"`
+}
+
 type ExchangeDetails struct {
 	Token    int    `json:"token"`
 	Exchange string `json:"exchange"`
 	Symbol   string `json:"symbol"`
+}
+
+type ExchangeFundResponse struct {
+	Deposit             float64 `json:"deposit"`
+	FundsTransferred    float64 `json:"funds_transferred"`
+	Collateral          float64 `json:"collateral"`
+	CreditForSale       float64 `json:"credit_for_sale"`
+	OptionCreditForSale float64 `json:"option_credit_for_sale"`
+	LimitUtilization    float64 `json:"limit_utilization"`
+	MtmAndBookedLoss    float64 `json:"mtm_and_booked_loss"`
+	BookedProfit        float64 `json:"booked_profit"`
+	TotalTradingPower   float64 `json:"total_trading_power"`
+	TotalUtilization    float64 `json:"total_utilization"`
+	NetAvailable        float64 `json:"net_available"`
+	FundsWithdrawal     float64 `json:"funds_withdrawal"`
 }
 
 type ExchangeTypes string
@@ -130,11 +191,113 @@ type FundDetails struct {
 	NetAvailable        float64 `json:"net_available"`
 }
 
+type FundResponse struct {
+	Nse ExchangeFundResponse `json:"nse"`
+	Mcx ExchangeFundResponse `json:"mcx"`
+}
+
+type FundWithdrawalCancelRequest struct {
+	TransactionId string        `json:"transaction_id"` // Required: Transaction ID.
+	Exchange      ExchangeTypes `json:"exchange"`       // Required: Exchange type.
+	Amount        float64       `json:"amount"`         // Required: Amount of the withdrawal.
+}
+    FundWithdrawalCancelRequest represents a request to cancel a fund
+    withdrawal.
+
+type FundWithdrawalItem struct {
+	TransactionId string        `json:"transaction_id"`
+	Amount        float64       `json:"amount"`
+	CreatedAt     time.Time     `json:"created_at"`
+	Status        string        `json:"status"`
+	Exchange      ExchangeTypes `json:"exchange"`
+}
+
+type FundWithdrawalListResponse struct {
+	Status  string               `json:"status"`
+	Message string               `json:"message,omitempty"`
+	Data    []FundWithdrawalItem `json:"data"`
+}
+
+type FundWithdrawalRequest struct {
+	BankAccountNumber string        `json:"bank_account_number"` // Required: Bank account number.
+	Ifsc              string        `json:"ifsc"`                // Required: IFSC code.
+	Amount            float64       `json:"amount"`              // Required: Amount to withdraw.
+	Exchange          ExchangeTypes `json:"exchange"`            // Required: Exchange type.
+}
+    FundWithdrawalRequest represents a request to withdraw funds.
+
 type FundsResponse struct {
 	NSE FundDetails `json:"nse"`
 	MCX FundDetails `json:"mcx"`
 }
 
+type Greeks struct {
+	Theta float64 `json:"theta"`
+	Delta float64 `json:"delta"`
+	Gamma float64 `json:"gamma"`
+	Vega  float64 `json:"vega"`
+	Iv    float64 `json:"iv"`
+}
+
+type GttLegs struct {
+	SlTriggerPercent     *float64 `json:"sl_trigger_percent"`     // Optional: Stop loss trigger percentage.
+	ProfitTriggerPercent *float64 `json:"profit_trigger_percent"` // Optional: Profit trigger percentage.
+}
+    GttLegs represents legs of a Good 'til Triggered (GTT) order.
+
+type GttOrderResponse struct {
+	Id              string                   `json:"id"`
+	Token           int                      `json:"token" binding:"required"`
+	Exchange        ExchangeTypes            `json:"exchange" binding:"required"`
+	Symbol          string                   `json:"symbol" binding:"required"`
+	Series          string                   `json:"series" binding:"required"`
+	InstrumentName  InstrumentName           `json:"instrument_name" binding:"required"`
+	ExpiryDate      string                   `json:"expiry_date" binding:"required"`
+	StrikePrice     float64                  `json:"strike_price" binding:"required"`
+	OptionType      OptionType               `json:"option_type" binding:"required"`
+	LotSize         int                      `json:"lot_size" binding:"required"`
+	TriggerType     GttTriggerType           `json:"trigger_type" binding:"required"`
+	TransactionType TransactionTypes         `json:"transaction_type" binding:"required"`
+	TagIds          pq.Int32Array            `json:"tag_ids"`
+	Orders          []GttOrderResponseOrders `json:"orders" binding:"required"`
+}
+
+type GttOrderResponseOrders struct {
+	Id              uint             `json:"id"`
+	ProductType     ProductTypes     `json:"product"`
+	Variety         VarietyTypes     `json:"variety"`
+	TransactionType TransactionTypes `json:"transaction_type"`
+	Price           float64          `json:"price"`
+	TriggerPrice    float64          `json:"trigger_price"`
+	Quantity        int              `json:"quantity"`
+	Status          GttOrderStatus   `json:"status"`
+	CreatedAt       time.Time        `json:"created_at"`
+	UpdatedAt       time.Time        `json:"updated_at"`
+	TrigerredAt     time.Time        `json:"trigerred_at"`
+}
+
+type GttOrderStatus string
+
+const (
+	GttOrderStatusTriggered GttOrderStatus = "triggered"
+	GttOrderStatusActive    GttOrderStatus = "active"
+	GttOrderStatusCancelled GttOrderStatus = "cancelled"
+	GttOrderStatusExpired   GttOrderStatus = "expired"
+	GttOrderStatusCompleted GttOrderStatus = "completed"
+)
+type GttOrderbookResponse struct {
+	Status string              `json:"status"`
+	Data   []*GttOrderResponse `json:"data"`
+}
+
+type GttTriggerType string
+    GttTriggerType represents the trigger type for a Good 'til Triggered (GTT)
+    order.
+
+const (
+	GttTriggerTypeSingle GttTriggerType = "single" // Single trigger type.
+	GttTriggerTypeOCO    GttTriggerType = "oco"    // One Cancels the Other (OCO) trigger type.
+)
 type HTTPClient interface {
 	GetClient() *httpClient
 	// Has unexported methods.
@@ -165,20 +328,67 @@ type HistoricalResponse struct {
 
 type Holding struct {
 	ISIN               string          `json:"isin"`
-	NSE                ExchangeDetails `json:"nse"`
-	BSE                ExchangeDetails `json:"bse"`
+	NSE                *ExchangeDetail `json:"nse,omitempty"`
+	BSE                *ExchangeDetail `json:"bse,omitempty"`
 	TotalFree          int             `json:"total_free"`
 	DPFree             int             `json:"dp_free"`
 	PoolFree           int             `json:"pool_free"`
 	T1Quantity         int             `json:"t1_quantity"`
 	AveragePrice       float64         `json:"average_price"`
+	LastPrice          float64         `json:"last_price"`
+	Product            string          `json:"product"`
 	CollateralQuantity int             `json:"collateral_quantity"`
 	CollateralValue    float64         `json:"collateral_value"`
 }
 
 type HoldingsResponse struct {
-	Status string    `json:"status"`
-	Data   []Holding `json:"data"`
+	Status  string    `json:"status"`
+	Message string    `json:"message,omitempty"`
+	Data    []Holding `json:"data"`
+}
+
+type IcebergOrderData struct {
+	IcebergOrderId string `json:"iceberg_order_id"`
+	FirstOrderId   string `json:"first_order_id"`
+}
+
+type IcebergOrderResponse struct {
+	Message string           `json:"message"`
+	Code    string           `json:"code"`
+	Status  string           `json:"status"`
+	Data    IcebergOrderData `json:"data"`
+}
+
+type InstrumentName string
+
+const (
+	InstrumentNameEqIndex             InstrumentName = "EQIDX"
+	InstrumentNameCom                 InstrumentName = "COM"
+	InstrumentNameEquities            InstrumentName = "EQUITIES"
+	InstrumentNameCommodityFuture     InstrumentName = "FUTCOM"
+	InstrumentNameCurrencyFuture      InstrumentName = "FUTCUR"
+	InstrumentNameIndexFuture         InstrumentName = "FUTIDX"
+	InstrumentNameInterestFuture      InstrumentName = "FUTIRC"
+	InstrumentNameInterestFutureT     InstrumentName = "FUTIRT"
+	InstrumentNameStockFuture         InstrumentName = "FUTSTK"
+	InstrumentNameCurrencyOption      InstrumentName = "OPTCUR"
+	InstrumentNameCommodityOption     InstrumentName = "OPTFUT"
+	InstrumentNameIndexOption         InstrumentName = "OPTIDX"
+	InstrumentNameInterestOption      InstrumentName = "OPTIRC"
+	InstrumentNameStockOption         InstrumentName = "OPTSTK"
+	InstrumentNameCurrentcyUnderlying InstrumentName = "UNDCUR"
+)
+type LegStockGreek struct {
+	Token       int        `json:"token" binding:"required"`
+	StrikePrice float64    `json:"strike_price"`
+	OptionType  OptionType `json:"option_type"`
+	ExpYYYYMMDD string     `json:"expiry_date"`
+	Action      string     `json:"action"`
+	LotSize     int        `json:"lot_size"`
+	Quantity    int        `json:"quantity"`
+	Ltp         float64    `json:"last_trade_price"` // Update
+	Iv          float64    `json:"iv"`               // Update *hide
+	Greeks      Greeks     `json:"greeks" gorm:"-"`
 }
 
 type LoginResponse struct {
@@ -213,15 +423,37 @@ type Metadata struct {
 	TotalRecords int `json:"total_records"`
 }
 
+type ModifyGttRequest struct {
+	Id           uint     `json:"id"`            // Required: Identifier of the GTT order to modify.
+	TriggerPrice *float64 `json:"trigger_price"` // Required: New trigger price for the GTT order.
+	Price        *float64 `json:"price"`         // Required: New price for the GTT order.
+	Quantity     *int     `json:"quantity"`      // Required: New quantity for the GTT order.
+}
+    ModifyGttRequest represents a request to modify a Good 'til Triggered (GTT)
+    order.
+
+type ModifyIcebergOrderRequest struct {
+	Price          float64 `json:"price"`           // Required: Price of the order.
+	TriggerPrice   float64 `json:"trigger_price"`   // Required: Trigger price for the order.
+	TradedQuantity int     `json:"traded_quantity"` // Required: Quantity already traded.
+}
+    ModifyIcebergOrderRequest represents a request to modify an Iceberg order.
+
 type ModifyOrderRequest struct {
-	Variety           VarietyTypes  `json:"variety"`
-	Quantity          int           `json:"quantity"`
-	TradedQuantity    int           `json:"traded_quantity"`
-	Price             float64       `json:"price"`
-	TriggerPrice      float64       `json:"trigger_price"`
-	DisclosedQuantity int           `json:"disclosed_quantity"`
-	Validity          ValidityTypes `json:"validity"`
-	ValidityDays      int           `json:"validity_days"`
+	Variety           VarietyTypes  `json:"variety" `           // Required: Type of variety.
+	Quantity          int           `json:"quantity" `          // Required: Quantity of the order.
+	TradedQuantity    *int          `json:"traded_quantity" `   // Required: Quantity which has already been traded according to you. This is important..
+	Price             float64       `json:"price" `             // Optional if market order. Price of the order.
+	TriggerPrice      float64       `json:"trigger_price"`      // Optional if not stoploss order. Trigger price for the order.
+	DisclosedQuantity int           `json:"disclosed_quantity"` // Optional: Disclosed quantity for the order.
+	Validity          ValidityTypes `json:"validity" `          // Required: Validity type for the order.
+	ValidityDays      int           `json:"validity_days"`      // Optional: Number of validity days.
+	TagIds            []int         `json:"tag_ids"`            // Optional: IDs of tags associated with the order.
+}
+
+type NetDayPositions struct {
+	Net []PositionItem `json:"net"`
+	Day []PositionItem `json:"day"`
 }
 
 type OhlcvQuoteData struct {
@@ -236,49 +468,97 @@ type OhlcvQuoteData struct {
 	ClosePrice     float64 `json:"close_price"`
 }
 
+type OptionChainRequest struct {
+	Token      int           `json:"token"`       // Required: Token of the underlying instrument.
+	ExpiryDate string        `json:"expiry_date"` // Optional: Expiry date of options in format YYYYMMDD. If not provided, the result will be of the closest expiry.
+	Exchange   ExchangeTypes `json:"exchange"`    // Required: Exchange type.
+	AddGreek   bool          `json:"greeks"`      // Optional: Include Greeks in the result. Default is false.
+}
+    OptionChainRequest represents a request to retrieve an option chain.
+
+type OptionChainResponse struct {
+	Status   string            `json:"status"`
+	Message  string            `json:"message"`
+	Response OptionchainResult `json:"response"`
+}
+
+type OptionType string
+
+const (
+	OptionTypeCall OptionType = "CE"
+	OptionTypePut  OptionType = "PE"
+)
+type OptionchainResult struct {
+	Symbol         string   `json:"symbol"`
+	ExpiryDate     string   `json:"expiry_date"`
+	HasParentStock bool     `json:"has_parent_stock"`
+	ExpiryDates    []string `json:"expiry_dates"`
+	Options        struct {
+		Exchange ExchangeTypes     `json:"exchange"`
+		List     []*DateOptionData `json:"list"`
+	} `json:"options"`
+	ParentStock struct {
+		Symbol   string        `json:"symbol"`
+		Exchange ExchangeTypes `json:"exchange"`
+		Token    int           `json:"token"`
+		ISINCode string        `json:"isin"`
+		LTP      float64       `json:"ltp"`
+	} `json:"parent"`
+}
+
 type Order struct {
-	OrderID                    string           `json:"order_id"`
-	Exchange                   ExchangeTypes    `json:"exchange"`
-	Token                      int              `json:"token"`
-	OrderNumber                string           `json:"order_number"`
-	Status                     string           `json:"status"`
-	ErrorReason                string           `json:"error_reason"`
-	TransactionType            TransactionTypes `json:"transaction_type"`
-	Product                    ProductTypes     `json:"product"`
-	Variety                    VarietyTypes     `json:"variety"`
-	TotalQuantity              int              `json:"total_quantity"`
-	PendingQuantity            int              `json:"pending_quantity"`
-	TradedQuantity             int              `json:"traded_quantity"`
-	DisclosedQuantity          int              `json:"disclosed_quantity"`
-	DisclosedQuantityRemaining int              `json:"disclosed_quantity_remaining"`
-	OrderPrice                 float64          `json:"order_price"`
-	TriggerPrice               float64          `json:"trigger_price"`
-	TradedPrice                float64          `json:"traded_price"`
-	Validity                   ValidityTypes    `json:"validity"`
-	ValidityDays               int              `json:"validity_days"`
-	Symbol                     string           `json:"symbol"`
-	Series                     string           `json:"series"`
-	InstrumentName             string           `json:"instrument_name"`
-	ExpiryDate                 string           `json:"expiry_date"`
-	StrikePrice                float64          `json:"strike_price"`
-	OptionType                 string           `json:"option_type"`
-	LotSize                    int              `json:"lot_size"`
-	OrderCreatedAt             string           `json:"order_created_at"`
-	InitiatedBy                string           `json:"initiated_by"`
-	ModifiedBy                 string           `json:"modified_by"`
-	IsAMO                      bool             `json:"is_amo"`
-	OrderIdentifier            string           `json:"order_identifier"`
+	OrderID                    string                `json:"order_id"`
+	Exchange                   ExchangeTypes         `json:"exchange"`
+	Token                      int                   `json:"token"`
+	OrderNumber                string                `json:"order_number"`
+	Status                     string                `json:"status"`
+	ErrorReason                string                `json:"error_reason"`
+	TransactionType            TransactionTypes      `json:"transaction_type"`
+	Product                    ProductTypes          `json:"product"`
+	Variety                    VarietyTypes          `json:"variety"`
+	TotalQuantity              int                   `json:"total_quantity"`
+	PendingQuantity            int                   `json:"pending_quantity"`
+	TradedQuantity             int                   `json:"traded_quantity"`
+	DisclosedQuantity          int                   `json:"disclosed_quantity"`
+	DisclosedQuantityRemaining int                   `json:"disclosed_quantity_remaining"`
+	OrderPrice                 float64               `json:"order_price"`
+	TriggerPrice               float64               `json:"trigger_price"`
+	TradedPrice                float64               `json:"traded_price,omitempty"`
+	Validity                   ValidityTypes         `json:"validity"`
+	Symbol                     string                `json:"symbol"`
+	Series                     string                `json:"series"`
+	InstrumentName             InstrumentName        `json:"instrument_name"`
+	ExpiryDate                 string                `json:"expiry_date"`
+	StrikePrice                float64               `json:"strike_price"`
+	OptionType                 OptionType            `json:"option_type"`
+	LotSize                    int                   `json:"lot_size"`
+	OrderCreatedAt             string                `json:"order_created_at"`
+	InitiatedBy                string                `json:"initiated_by"`
+	ModifiedBy                 string                `json:"modified_by"`
+	IsAMO                      bool                  `json:"is_amo"`
+	OrderIdentifier            string                `json:"order_identifier"`
+	TagsIds                    pq.Int32Array         `json:"tags_ids"`
+	MiddlewareOrderId          uint                  `json:"middleware_order_id"`
+	Iceberg                    *OrderBookIcebergInfo `json:"iceberg,omitempty"`
+	Gtt                        *OrderBookGttInfo     `json:"gtt,omitempty"`
+}
+
+type OrderBookGttInfo struct {
+	TriggerType          GttTriggerType `json:"trigger_type"`
+	SlTriggerPercent     *float64       `json:"sl_trigger_percent,omitempty"`
+	ProfitTriggerPercent *float64       `json:"profit_trigger_percent,omitempty"`
+}
+
+type OrderBookIcebergInfo struct {
+	IcebergOrderId  string `json:"iceberg_order_id"`
+	IcebergSequence int    `json:"iceberg_sequence"`
+	Legs            int    `json:"legs"`
 }
 
 type OrderBookResponse struct {
-	Status   string  `json:"status"`
-	Orders   []Order `json:"orders"`
-	Metadata struct {
-		TotalRecords     int `json:"total_records"`
-		AllRecords       int `json:"all_records"`
-		CompletedRecords int `json:"completed_records"`
-		OpenRecords      int `json:"open_records"`
-	} `json:"metadata"`
+	Status   string   `json:"status"`
+	Orders   []Order  `json:"orders"`
+	Metadata Metadata `json:"metadata"`
 }
 
 type OrderHistory struct {
@@ -301,10 +581,10 @@ type OrderHistory struct {
 	ValidityDays           int              `json:"validity_days"`
 	Symbol                 string           `json:"symbol"`
 	Series                 string           `json:"series"`
-	InstrumentName         string           `json:"instrument_name"`
+	InstrumentName         InstrumentName   `json:"instrument_name"`
 	ExpiryDate             string           `json:"expiry_date"`
 	StrikePrice            float64          `json:"strike_price"`
-	OptionType             string           `json:"option_type"`
+	OptionType             OptionType       `json:"option_type"`
 	OrderCreatedAt         string           `json:"order_created_at"`
 	ExchangeOrderCreatedAt string           `json:"exchange_order_created_at"`
 	InitiatedBy            string           `json:"initiated_by"`
@@ -317,52 +597,150 @@ type OrderHistoryResponse struct {
 	Status   string         `json:"status"`
 	Code     string         `json:"code"`
 	Message  string         `json:"message"`
-	Data     []OrderHistory `json:"data"`
+	Data     []OrderHistory `json:"orders"`
 	Metadata Metadata       `json:"metadata"`
 }
 
 type OrderMarginRequest struct {
-	Exchange        ExchangeTypes    `json:"exchange"`
-	Token           int              `json:"token"`
-	TransactionType TransactionTypes `json:"transaction_type"`
-	Product         ProductTypes     `json:"product"`
-	Variety         VarietyTypes     `json:"variety"`
-	Quantity        int              `json:"quantity"`
-	Price           float64          `json:"price"`
-	OldPrice        float64          `json:"old_price"`
-	OldQuantity     int              `json:"old_quantity"`
-	Mode            MarginModes      `json:"mode"`
+	Exchange        ExchangeTypes    `json:"exchange"`         // Required: Exchange type.
+	Token           int              `json:"token"`            // Required: Token of the underlying instrument.
+	TransactionType TransactionTypes `json:"transaction_type"` // Required: Type of transaction.
+	Product         ProductTypes     `json:"product"`          // Required: Type of product.
+	Variety         VarietyTypes     `json:"variety"`          // Required: Type of variety.
+	Quantity        int              `json:"quantity"`         // Required: Quantity of the order.
+	Price           float64          `json:"price"`            // Required: Price of the order.
+	OldPrice        float64          `json:"old_price"`        // Required: Old price of the order.
+	OldQuantity     int              `json:"old_quantity"`     // Required: Old quantity of the order.
+	Mode            MarginModes      `json:"mode"`             // Required: Mode of margin calculation.
 }
+    OrderMarginRequest represents a request to calculate margin for an order.
 
 type OrderResponse struct {
 	Status  string `json:"status"`
 	Code    string `json:"code"`
 	Message string `json:"message"`
 	Data    struct {
-		OrderID string `json:"orderId"`
+		OrderID string `json:"order_id"`
 	} `json:"data"`
 }
 
-type PlaceOrderRequest struct {
-	Exchange          ExchangeTypes    `json:"exchange"`
-	Token             int              `json:"token"`
-	TransactionType   TransactionTypes `json:"transaction_type"`
-	Product           ProductTypes     `json:"product"`
-	Variety           VarietyTypes     `json:"variety"`
-	Quantity          int              `json:"quantity"`
-	Price             float64          `json:"price"`
-	TriggerPrice      float64          `json:"trigger_price"`
-	DisclosedQuantity int              `json:"disclosed_quantity"`
-	Validity          ValidityTypes    `json:"validity"`
-	ValidityDays      int              `json:"validity_days"`
-	IsAMO             bool             `json:"is_amo"`
+type PayOff struct {
+	IPayoff float64 `json:"intraday_pay_off"`
+	EPayoff float64 `json:"expiry_pay_off"`
+	At      float64 `json:"at"`
 }
 
-type Position struct {
+type PayOffData struct {
+	MaxLoss          float64         `json:"max_loss"`
+	MaxProfit        float64         `json:"max_profit"`
+	IsInfiniteProfit bool            `json:"infinite_profit"`
+	IsInfiniteLoss   bool            `json:"infinite_loss"`
+	BreakEvens       []float64       `json:"breakevens"`
+	PayOffs          []PayOff        `json:"payoffs"`
+	CombinedGreeks   Greeks          `json:"combined_greeks"`
+	LivePrice        float64         `json:"last_trade_price"`
+	LegStocks        []LegStockGreek `json:"leg_greeks"`
+	MinDaysToExpiry  int             `json:"min_days_to_expiry"`
+}
+
+type PayoffAction string
+
+const (
+	PayoffActionBUY  PayoffAction = "BUY"
+	PayoffActionSELL PayoffAction = "SELL"
+)
+    PayoffAction represents the action for a trading strategy.
+
+type PayoffOption struct {
+	Token    int          `json:"token"`            // Required: Token of the underlying instrument.
+	Action   PayoffAction `json:"action"`           // Required: Action for the option.
+	Quantity int          `json:"quantity"`         // Required: Quantity of the option.
+	Ltp      float64      `json:"last_trade_price"` // Optional: Last traded price for the option.
+}
+    PayoffOption represents an option within a trading strategy.
+
+type PayoffRequest struct {
+	Symbol          string         `json:"symbol" `        // Required: Symbol for the underlying asset.
+	Exchange        ExchangeTypes  `json:"exchange" `      // Required: Exchange type.
+	Legs            []PayoffOption `json:"legs"`           // Required: Legs of the trading strategy.
+	InpDaysToExpiry *int           `json:"days_to_expiry"` // Optional: Number of days to expiry.
+	CurrentPnl      float64        `json:"current_pnl"`    // Optional: Current profit or loss.
+}
+    PayoffRequest represents a request to calculate the payoff for a trading
+    strategy.
+
+type PayoffResponse struct {
+	Status  string     `json:"status"`
+	Message string     `json:"message"`
+	Data    PayOffData `json:"data"`
+}
+
+type PlaceGttLegRequest struct {
+	Quantity     int          `json:"quantity"`      // Required: Quantity of the leg.
+	Price        float64      `json:"price"`         // Required: Price of the leg.
+	TriggerPrice float64      `json:"trigger_price"` // Required: Trigger price for the leg.
+	ProductType  ProductTypes `json:"product"`       // Required: Type of product for the leg.
+}
+    PlaceGttLegRequest represents a leg of a Good 'til Triggered (GTT) order.
+
+type PlaceGttRequest struct {
+	Exchange        ExchangeTypes       `json:"exchange"`         // Required: Exchange type.
+	Token           int                 `json:"token"`            // Required: Token of the underlying instrument.
+	TransactionType TransactionTypes    `json:"transaction_type"` // Required: Type of transaction.
+	Quantity        *int                `json:"quantity"`         // Required: Quantity of the order.
+	TriggerPrice    *float64            `json:"trigger_price"`    // Required: Trigger price for the order.
+	Price           *float64            `json:"price"`            // Required: Price of the order.
+	OrderIdentifier string              `json:"order_identifier"` // Required: Identifier for the order.
+	GttTriggerType  GttTriggerType      `json:"gtt_trigger_type"` // Required: Type of GTT trigger.
+	Product         ProductTypes        `json:"product"`          // Required: Type of product.
+	Stoploss        *PlaceGttLegRequest `json:"stoploss"`         // Optional: Stop loss leg of the GTT order.
+	Profit          *PlaceGttLegRequest `json:"profit"`           // Optional: Profit leg of the GTT order.
+	TagIds          []int               `json:"tag_ids"`          // Required: IDs of tags associated with the order.
+}
+    PlaceGttRequest represents a request to place a Good 'til Triggered (GTT)
+    order.
+
+type PlaceIcebergOrderRequest struct {
+	Exchange        ExchangeTypes    `json:"exchange"`         // Required: Exchange type.
+	Token           int              `json:"token"`            // Required: Token of the underlying instrument.
+	TransactionType TransactionTypes `json:"transaction_type"` // Required: Type of transaction.
+	Product         ProductTypes     `json:"product"`          // Required: Type of product.
+	Variety         VarietyTypes     `json:"variety"`          // Required: Type of variety.
+	Quantity        int              `json:"quantity"`         // Required: Quantity of the order.
+	Price           *float64         `json:"price"`            // Optional if market order. Price of the order.
+	TriggerPrice    float64          `json:"trigger_price"`    // Optional if not stoploss order. Trigger price for the order.
+	OrderIdentifier string           `json:"order_identifier"` // Optional: Your identifier for the order.
+	Validity        ValidityTypes    `json:"validity"`         // Required: Validity type for the order.
+	Legs            int              `json:"legs"`             // Required: Number of legs for the order.
+	TagIds          pq.Int32Array    `json:"tag_ids"`          // IDs of tags associated with the order.
+}
+    PlaceIcebergOrderRequest represents a request to place an Iceberg order.
+
+type PlaceOrderRequest struct {
+	Exchange          ExchangeTypes    `json:"exchange"`           // Required: Exchange type.
+	Token             int              `json:"token"`              // Required: Token of the underlying instrument.
+	TransactionType   TransactionTypes `json:"transaction_type"`   // Required: Type of transaction.
+	Product           ProductTypes     `json:"product"`            // Required: Type of product.
+	Variety           VarietyTypes     `json:"variety"`            // Required: Type of variety.
+	Quantity          int              `json:"quantity"`           // Required: Quantity of the order.
+	Price             float64          `json:"price"`              // Optional if market order. Price of the order.
+	TriggerPrice      float64          `json:"trigger_price"`      // Optional if not stoploss order. Trigger price for the order.
+	OrderIdentifier   string           `json:"order_identifier"`   // Optional: Your identifier for the order.
+	DisclosedQuantity int              `json:"disclosed_quantity"` // Optional: Disclosed quantity for the order.
+	Validity          ValidityTypes    `json:"validity"`           // Required: Validity type for the order.
+	ValidityDays      int              `json:"validity_days"`      // Optional: Number of validity days.
+	IsAMO             bool             `json:"is_amo"`             // Optional: Flag indicating if the order is an after-market order.
+	Gtt               *GttLegs         `json:"gtt"`                // Optional: Good 'til Triggered (GTT) legs.
+	TagIds            []int            `json:"tag_ids"`            // Optional: IDs of tags associated with the order.
+}
+    PlaceOrderRequest represents a request to place an order.
+
+type PositionItem struct {
 	Exchange              ExchangeTypes `json:"exchange"`
 	Symbol                string        `json:"symbol"`
 	ExpiryDate            string        `json:"expiry_date"`
-	OptionType            string        `json:"option_type"`
+	OptionType            OptionType    `json:"option_type"`
+	StrikePrice           float64       `json:"strike_price"`
 	Token                 int           `json:"token"`
 	Product               ProductTypes  `json:"product"`
 	Quantity              int           `json:"quantity"`
@@ -381,16 +759,19 @@ type Position struct {
 	SellPrice             float64       `json:"sell_price"`
 }
 
-type PositionData struct {
-	Net []Position `json:"net"`
-	Day []Position `json:"day"`
-}
-
 type PositionResponse struct {
-	Status string       `json:"status"`
-	Data   PositionData `json:"data"`
+	Status string          `json:"status"`
+	Data   NetDayPositions `json:"data"`
 }
 
+type PredictionType string
+    PredictionType represents the type of prediction for a trading strategy.
+
+const (
+	PredictionTypeABOVE   PredictionType = "ABOVE"   // Predict that the asset price will be above a certain level.
+	PredictionTypeBELOW   PredictionType = "BELOW"   // Predict that the asset price will be below a certain level.
+	PredictionTypeBETWEEN PredictionType = "BETWEEN" // Predict that the asset price will be within a certain range.
+)
 type ProductTypes string
 
 const (
@@ -504,6 +885,105 @@ type SocketMessageData struct {
 	GtdOrderStatus             string  `json:"gtd_order_status"`
 }
 
+type StockWithGreek struct {
+	Token          int     `json:"token"`
+	InstrumentName string  `json:"instrument_name"`
+	LotSize        int     `json:"lot_size"`
+	SecurityDesc   string  `json:"security_description"`
+	Eligibility    int     `json:"eligibility"`
+	Ltp            float64 `json:"ltp"`
+	OpenInterest   int     `json:"open_interest"`
+	DayFirstTickOI int     `json:"day_first_tick_oi" `
+	Volume         int     `json:"volume"`
+	Delta          float64 `json:"delta"`
+}
+
+type StrategiesRequest struct {
+	Token       int    `json:"token"`       // Required: Token for authentication.
+	Symbol      string `json:"symbol"`      // Required: Symbol for the underlying asset.
+	ExpYYYYMMDD string `json:"expiry_date"` // Required: Expiry date of the strategy in format YYYYMMDD.
+}
+    StrategiesRequest represents a request to retrieve strategies.
+
+type StrategiesResponse struct {
+	Status  string           `json:"status"`
+	Message string           `json:"message"`
+	Data    StrategiesResult `json:"data"`
+}
+
+type StrategiesResult struct {
+	Symbol     string     `json:"symbol"`
+	Token      int        `json:"token"`
+	Ltp        float64    `json:"ltp"`
+	Strategies []Strategy `json:"strategies"`
+}
+
+type Strategy struct {
+	Name                 string               `json:"strategy_name"`
+	TradingOpportunities []TradingOpportunity `json:"trading_opportunities"`
+}
+
+type StrategyBuilderRequest struct {
+	Token      int            `json:"token"`       // Required: Token of the underlying instrument.
+	Symbol     string         `json:"symbol"`      // Required: Symbol of the underlying instrument.
+	MarketView PredictionType `json:"prediction"`  // Required: Prediction type. Should be one of ["ABOVE", "BELOW", "BETWEEN"]
+	ExpiryDate string         `json:"expiry_date"` // Required: Expiry date of options in format: YYYYMMDD
+	PriceRange []float64      `json:"price_range"` // Price range for the strategy.
+}
+
+type StrategyLeg struct {
+	Option   StrategyStock `json:"option"`
+	Action   string        `json:"action"`
+	Quantity int           `json:"quantity"`
+}
+
+type StrategyStock struct {
+	Token          int           `json:"token"`
+	InstrumentName string        `json:"instrument_name"`
+	Symbol         string        `json:"symbol"`
+	StrikePrice    float64       `json:"strike_price"`
+	OptionType     OptionType    `json:"option_type"`
+	LotSize        int           `json:"lot_size"`
+	SecurityDesc   string        `json:"security_description"`
+	Exchange       ExchangeTypes `json:"exchange"`
+	ExpYyyymmdd    string        `json:"expiry_date"`
+	Ltp            float64       `json:"ltp"`
+	Greeks         struct {
+		Theta float64 `json:"theta"`
+		Delta float64 `json:"delta"`
+		Gamma float64 `json:"gamma"`
+		Vega  float64 `json:"vega"`
+		Iv    float64 `json:"iv"`
+	} `json:"greeks"`
+}
+
+type TagInfo struct {
+	Id          int       `json:"id"`
+	ClientCode  string    `json:"client_code"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+type TagRequest struct {
+	Name        string `json:"name"`        // Name of the tag.
+	Description string `json:"description"` // Description of the tag.
+}
+    TagRequest represents a request to create a tag.
+
+type TagResponse struct {
+	Status  string  `json:"status"`
+	Message string  `json:"message"`
+	Data    TagInfo `json:"data"`
+}
+
+type TagsResponse struct {
+	Status  string    `json:"status"`
+	Message string    `json:"message"`
+	Data    []TagInfo `json:"data"`
+}
+
 type Trade struct {
 	OrderID         string           `json:"order_id"`
 	Exchange        ExchangeTypes    `json:"exchange"`
@@ -520,7 +1000,7 @@ type Trade struct {
 	InstrumentName  string           `json:"instrument_name"`
 	ExpiryDate      string           `json:"expiry_date"`
 	StrikePrice     float64          `json:"strike_price"`
-	OptionType      string           `json:"option_type"`
+	OptionType      OptionType       `json:"option_type"`
 	TradedAt        string           `json:"traded_at"`
 	InitiatedBy     string           `json:"initiated_by"`
 	ModifiedBy      string           `json:"modified_by"`
@@ -533,6 +1013,15 @@ type TradeBookResponse struct {
 	Metadata struct {
 		TotalRecords int `json:"total_records"`
 	} `json:"metadata"`
+}
+
+type TradingOpportunity struct {
+	Legs             []StrategyLeg `json:"legs"`
+	MaxLoss          float64       `json:"max_loss"`
+	MaxProfit        float64       `json:"max_profit"`
+	IsInfiniteProfit bool          `json:"is_infinite_profit"`
+	IsInfiniteLoss   bool          `json:"is_infinite_loss"`
+	BreakEven        []float64     `json:"breakeven"`
 }
 
 type TransactionTypes string
@@ -579,12 +1068,36 @@ type VortexApi struct {
 }
     VortexApi is a struct representing the Vortex API client
 
-func (v *VortexApi) CancelOrder(ctx context.Context, exchange ExchangeTypes, orderID string) (*OrderResponse, error)
+func (v *VortexApi) BuildStrategy(ctx context.Context, req StrategyBuilderRequest) (*StrategiesResponse, error)
+    BuildStrategy initiates the strategy building process with the Vortex API
+    based on the provided StrategyBuilderRequest. It takes a context and a
+    StrategyBuilderRequest as input. It returns a StrategiesResponse and an
+    error.
+
+func (v *VortexApi) CancelGttOrder(ctx context.Context, gtt_order_id string) (*OrderResponse, error)
+    CancelGttOrder cancels an existing Good Till Trigger (GTT) order with the
+    Vortex API. It takes a context and a GTT order ID as input. It returns an
+    OrderResponse and an error.
+
+func (v *VortexApi) CancelIcebergOrder(ctx context.Context, iceberg_order_id string) (*CancelIcebergOrderResponse, error)
+    CancelIcebergOrder cancels an existing iceberg order with the Vortex API.
+    It takes a context and an iceberg order ID as input. It returns a
+    CancelIcebergOrderResponse and an error.
+
+func (v *VortexApi) CancelOrder(ctx context.Context, orderID string) (*OrderResponse, error)
     CancelOrder cancels an existing order with the Vortex API. It takes a
     context, an ExchangeTypes value, and an order ID as input. It returns an
     OrderResponse and an error.
 
-func (v *VortexApi) ConvertPosition(ctx context.Context, req ConvertPositionObject) (*ConvertPositionResponse, error)
+func (v *VortexApi) ConvertPosition(ctx context.Context, req ConvertPositionRequest) (*ConvertPositionResponse, error)
+
+func (v *VortexApi) CreateTag(ctx context.Context, request TagRequest) (*TagResponse, error)
+    CreateTag creates a new tag with the Vortex API. It takes a context and a
+    TagRequest as input. It returns a TagResponse and an error.
+
+func (v *VortexApi) DeleteTag(ctx context.Context, tag_id int) (*TagResponse, error)
+    DeleteTag deletes an existing tag with the Vortex API. It takes a context
+    and a tag ID as input. It returns a TagResponse and an error.
 
 func (v *VortexApi) DownloadMaster(ctx context.Context) ([]map[string]string, error)
     DownloadMaster retrieves the master data from the Vortex API. It returns a
@@ -595,6 +1108,26 @@ func (v *VortexApi) Funds(ctx context.Context) (*FundsResponse, error)
 
 func (v *VortexApi) GetLoginUrl() string
     GetLoginUrl returns the login URL for the Vortex API
+
+func (v *VortexApi) GetOptionChain(ctx context.Context, req OptionChainRequest) (*OptionChainResponse, error)
+    GetOptionChain retrieves the option chain from the Vortex API based on the
+    provided OptionChainRequest. It takes a context and an OptionChainRequest as
+    input. It returns an OptionChainResponse and an error.
+
+func (v *VortexApi) GetPayoff(ctx context.Context, req PayoffRequest) (*PayoffResponse, error)
+    GetPayoff calculates the payoff for strategies with the Vortex API based on
+    the provided PayoffRequest. It takes a context and a PayoffRequest as input.
+    It returns a PayoffResponse and an error.
+
+func (v *VortexApi) GetStrategies(ctx context.Context, req StrategiesRequest) (*StrategiesResponse, error)
+    GetStrategies retrieves strategies from the Vortex API based on the provided
+    StrategiesRequest. It takes a context and a StrategiesRequest as input.
+    It returns a StrategiesResponse and an error.
+
+func (v *VortexApi) GttOrders(ctx context.Context) (*GttOrderbookResponse, error)
+    GttOrders retrieves the Good Till Trigger (GTT) orderbook from the Vortex
+    API. It takes a context as input. It returns a GttOrderbookResponse and an
+    error.
 
 func (v *VortexApi) HistoricalCandles(ctx context.Context, exchange ExchangeTypes, token int, from time.Time, to time.Time, resolution Resolutions) (*HistoricalResponse, error)
     HistoricalCandles retrieves historical candlestick data from the Vortex API.
@@ -608,9 +1141,19 @@ func (v *VortexApi) Holdings(ctx context.Context) (*HoldingsResponse, error)
 
 func (v *VortexApi) Login(ctx context.Context, clientCode string, password string, totp string) (*LoginResponse, error)
     Login performs the login operation in the Vortex API. It takes a context,
-    client code, password, and TOTP (Time-Based One-Time Password) as input. If
-    the login is successful, the method updates the accessToken field of the
+    client code, password, and TOTP (Time-Based One-Time Password) as input.
+    If the login is successful, the method updates the accessToken field of the
     VortexApi instance. It returns the LoginResponse and an error.
+
+func (v *VortexApi) ModifyGttOrder(ctx context.Context, gtt_order_id string, request ModifyGttRequest) (*OrderResponse, error)
+    ModifyGttOrder modifies an existing Good Till Trigger (GTT) order with the
+    Vortex API. It takes a context, a GTT order ID, and a ModifyGttRequest as
+    input. It returns an OrderResponse and an error.
+
+func (v *VortexApi) ModifyIcebergOrder(ctx context.Context, iceberg_order_id string, request ModifyIcebergOrderRequest) (*IcebergOrderResponse, error)
+    ModifyIcebergOrder modifies an existing iceberg order with the Vortex API.
+    It takes a context, an iceberg order ID, and a ModifyIcebergOrderRequest as
+    input. It returns an IcebergOrderResponse and an error.
 
 func (v *VortexApi) ModifyOrder(ctx context.Context, request ModifyOrderRequest, exchange ExchangeTypes, orderID string) (*OrderResponse, error)
     ModifyOrder modifies an existing order with the Vortex API. It takes a
@@ -625,37 +1168,55 @@ func (v *VortexApi) OrderMargin(ctx context.Context, request *OrderMarginRequest
     context and an OrderMarginRequest as input. It returns a MarginResponse and
     an error.
 
-func (v *VortexApi) Orders(ctx context.Context, offset int, limit int) (*OrderBookResponse, error)
+func (v *VortexApi) Orders(ctx context.Context) (*OrderBookResponse, error)
     Orders retrieves the order book information from the Vortex API. It takes a
     context, an offset, and a limit as input. It returns an OrderBookResponse
     and an error.
 
+func (v *VortexApi) PlaceGttOrder(ctx context.Context, request PlaceGttRequest) (*OrderResponse, error)
+    PlaceGttOrder places a Good Till Trigger (GTT) order with the Vortex API. It
+    takes a context and a PlaceGttRequest as input. It returns an OrderResponse
+    and an error.
+
+func (v *VortexApi) PlaceIcebergOrder(ctx context.Context, request PlaceIcebergOrderRequest) (*IcebergOrderResponse, error)
+    PlaceIcebergOrder places an iceberg order with the Vortex API.
+    It takes a context and a PlaceIcebergOrderRequest as input. It returns an
+    IcebergOrderResponse and an error.
+
 func (v *VortexApi) PlaceOrder(ctx context.Context, request PlaceOrderRequest) (*OrderResponse, error)
-    PlaceOrder places an order with the Vortex API. It takes a context and a
-    PlaceOrderRequest as input. The request's Validity field is used to
+    PlaceOrder places an order with the Vortex API. It takes a context and
+    a PlaceOrderRequest as input. The request's Validity field is used to
     determine the ValidityDays and IsAMO values. It returns an OrderResponse and
     an error.
 
 func (v *VortexApi) Positions(ctx context.Context) (*PositionResponse, error)
-    Positions retrieves the positions information from the Vortex API. It
-    returns a PositionsResponse and an error.
+    Positions retrieves the positions information from the Vortex API.
+    It returns a PositionsResponse and an error.
 
 func (v *VortexApi) Quotes(ctx context.Context, instruments []string, mode QuoteModes) (*QuoteResponse, error)
     Quotes retrieves real-time quote information for the specified instruments
-    from the Vortex API. It takes a context, a slice of instrument names, and a
-    quote mode as input. It returns a QuoteResponse and an error.
+    from the Vortex API. It takes a context, a slice of instrument names,
+    and a quote mode as input. It returns a QuoteResponse and an error.
 
 func (v *VortexApi) SetAccessToken(accessToken string)
 
 func (v *VortexApi) SetHTTPClient(h *http.Client)
     SetHTTPClient sets the HTTP client for the Vortex API client
 
-func (v *VortexApi) SetLogging(h *http.Client)
+func (v *VortexApi) SetLogging(flag bool)
     SetLogging sets the HTTP client with logging enabled
+
+func (v *VortexApi) Tags(ctx context.Context) (*TagsResponse, error)
+    Tags retrieves the list of tags from the Vortex API. It takes a context as
+    input. It returns a TagsResponse and an error.
 
 func (v *VortexApi) Trades(ctx context.Context, offset int, limit int) (*TradeBookResponse, error)
     Trades retrieves the trade book information from the Vortex API. It returns
     a TradeBookResponse and an error.
+
+func (v *VortexApi) UpdateTag(ctx context.Context, tag_id int, request TagRequest) (*TagResponse, error)
+    UpdateTag updates an existing tag with the Vortex API. It takes a context,
+    a tag ID, and a TagRequest as input. It returns a TagResponse and an error.
 
 type Wire struct {
 	Conn *websocket.Conn

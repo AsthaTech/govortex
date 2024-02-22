@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 
-	govortex "github.com/AsthaTech/govortex"
+	govortex "github.com/AsthaTech/govortex/v2"
 )
 
 const (
@@ -18,8 +18,8 @@ func main() {
 	client.Login(ctx, "clientCode", "password", "totp")
 	// Access token is automatically set upon successful login call
 
-	client.Orders(ctx, 1, 20) //orders need an offset and limit
-	client.Positions(ctx)     //positions need an offset and limit
+	client.Orders(ctx)    //orders need an offset and limit
+	client.Positions(ctx) //positions need an offset and limit
 
 	client.PlaceOrder(ctx, govortex.PlaceOrderRequest{
 		Exchange:          govortex.ExchangeTypesNSEEQUITY,

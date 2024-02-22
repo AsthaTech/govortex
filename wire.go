@@ -14,51 +14,121 @@ import (
 	"sync"
 	"time"
 
+	"github.com/lib/pq"
 	"nhooyr.io/websocket"
 )
 
 type SocketMessage struct {
-	Type string            `json:"type"`
-	Data SocketMessageData `json:"data"`
+	Type       string             `json:"type"`
+	Data       *SocketMessageData `json:"data,omitempty"`
+	AlertInfo  *AlertInfo         `json:"alert_info,omitempty"`
+	Gtt        *GttInfo           `json:"gtt,omitempty"`
+	ClientCode string             `json:"client_code,omitempty"`
 }
+type AlertProperty string
+type AlertInfo struct {
+	Name           string         `json:"name"`
+	ClientCode     string         `json:"client_code"`
+	Token          int            `json:"token"`
+	Exchange       ExchangeTypes  `json:"exchange"`
+	TriggerValue   float64        `json:"trigger_value"`
+	Property       AlertProperty  `json:"property"`
+	Condition      AlertCondition `json:"condition"`
+	Status         string         `json:"status" `
+	Note           string         `json:"note"`
+	Expiry         time.Time      `json:"expiry"`
+	LastExecutedAt time.Time      `json:"last_executed_at"`
+	IsExecuted     *bool          `json:"is_executed"`
+	CreatedAt      time.Time      `json:"created_at"`
+	UpdatedAt      time.Time      `json:"updated_at"`
+}
+type AlertCondition string
+
+const (
+	AlertConditionLE AlertCondition = "LE"
+	AlertConditionGE AlertCondition = "GE"
+	AlertConditionEQ AlertCondition = "EQ"
+)
+
+const (
+	AlertPropertyLTP      AlertProperty = "LTP"
+	AlertPropertyVOLUME   AlertProperty = "VOLUME"
+	AlertPropertyAVGPRICE AlertProperty = "AVGPRICE"
+)
+
+type GttInfo struct {
+	Id              string           `json:"id"`
+	Token           int              `json:"token"`
+	Exchange        ExchangeTypes    `json:"exchange"`
+	Symbol          string           `json:"symbol"`
+	StrikePrice     float64          `json:"strike_price"`
+	InstrumentName  string           `json:"instrument_name"`
+	ExpiryDate      string           `json:"expiry_date"`
+	OptionType      OptionType       `json:"option_type"`
+	LotSize         int              `json:"lot_size"`
+	TriggerType     GttTriggerType   `json:"trigger_type"`
+	TransactionType TransactionTypes `json:"transaction_type"`
+	TagIds          pq.Int32Array    `json:"tag_ids"`
+	OrderIdentifier string           `json:"order_identifier"`
+	Orders          []GttInfoOrder   `json:"orders"`
+}
+type GttInfoOrder struct {
+	Id           uint           `json:"id"`
+	Product      ProductTypes   `json:"product"`
+	Variety      VarietyTypes   `json:"variety"`
+	Price        *float64       `json:"price"`
+	TriggerPrice *float64       `json:"trigger_price"`
+	Quantity     int            `json:"quantity"`
+	Status       GttOrderStatus `json:"status"`
+	CreatedAt    time.Time      `json:"created_at"`
+	UpdatedAt    time.Time      `json:"updated_at"`
+	TrigerredAt  time.Time      `json:"trigerred_at"`
+}
+
 type SocketMessageData struct {
-	OrderId                    string  `json:"order_id"`
-	OrderNumber                string  `json:"order_number"`
-	AmoOrderId                 string  `json:"amo_order_id"`
-	PlacedBy                   string  `json:"placed_by"`
-	ModifiedBy                 string  `json:"modified_by"`
-	Status                     string  `json:"status"`
-	StatusMessage              string  `json:"status_message"`
-	Symbol                     string  `json:"symbol"`
-	Series                     string  `json:"series"`
-	InstrumentName             string  `json:"instrument_name"`
-	Token                      int     `json:"token"`
-	Exchange                   string  `json:"exchange"`
-	ExpiryDate                 string  `json:"expiry_date"`
-	StrikePrice                float32 `json:"strike_price"`
-	OptionType                 string  `json:"option_type"`
-	TransactionType            string  `json:"transaction_type"`
-	Validity                   string  `json:"validity"`
-	ValidityDays               int     `json:"validity_days"`
-	Product                    string  `json:"product"`
-	Variety                    string  `json:"variety"`
-	DisclosedQuantity          int     `json:"disclosed_quantity"`
-	DisclosedQuantityRemaining int     `json:"disclosed_quantity_remaining"`
-	TotalQuantity              int     `json:"total_quantity"`
-	PendingQuantity            int     `json:"pending_quantity"`
-	TradedQuantity             int     `json:"traded_quantity"`
-	MarketType                 string  `json:"market_type"`
-	OrderPrice                 float32 `json:"order_price"`
-	TriggerPrice               float32 `json:"trigger_price"`
-	TradedPrice                float32 `json:"traded_price"`
-	IsAmo                      bool    `json:"is_amo"`
-	OrderIdentifier            string  `json:"order_identifier"`
-	OrderCreatedAt             string  `json:"order_created_at"`
-	OrderUpdatedAt             string  `json:"order_updated_at"`
-	TradeNumber                string  `json:"trade_number,omitempty"`
-	TradeTime                  string  `json:"trade_time,omitempty"`
-	MarketSegmentId            int     `json:"market_segment_id"`
-	GtdOrderStatus             string  `json:"gtd_order_status"`
+	OrderId                    string           `json:"order_id"`
+	MiddlewareOrderId          uint             `json:"middleware_order_id"`
+	TriggersGtt                bool             `json:"triggers_gtt"`
+	OrderNumber                string           `json:"order_number"`
+	AmoOrderId                 string           `json:"amo_order_id"`
+	PlacedBy                   string           `json:"placed_by"`
+	ModifiedBy                 string           `json:"modified_by"`
+	Status                     OrderStatus      `json:"status"`
+	StatusMessage              string           `json:"status_message"`
+	Symbol                     string           `json:"symbol"`
+	Series                     string           `json:"series"`
+	InstrumentName             string           `json:"instrument_name"`
+	Token                      int              `json:"token"`
+	Exchange                   ExchangeTypes    `json:"exchange"`
+	ExpiryDate                 string           `json:"expiry_date"`
+	StrikePrice                float32          `json:"strike_price"`
+	OptionType                 string           `json:"option_type"`
+	TransactionType            TransactionTypes `json:"transaction_type"`
+	Validity                   ValidityTypes    `json:"validity"`
+	ValidityDays               int              `json:"validity_days"`
+	Product                    ProductTypes     `json:"product"` //Intraday, Delivery or MTF
+	Variety                    VarietyTypes     `json:"variety"` //regular , SL , SL-MKT,amo etc
+	DisclosedQuantity          int              `json:"disclosed_quantity"`
+	DisclosedQuantityRemaining int              `json:"disclosed_quantity_remaining"`
+	TotalQuantity              int              `json:"total_quantity"`
+	PendingQuantity            int              `json:"pending_quantity"`
+	TradedQuantity             int              `json:"traded_quantity"`
+	ThisTradeQuantity          int              `json:"this_trade_quantity,omitempty"`
+	MarketType                 string           `json:"market_type"`
+	OrderPrice                 float32          `json:"order_price"`
+	TriggerPrice               float32          `json:"trigger_price"`
+	CoverTriggerPrice          float32          `json:"cover_trigger_price"`
+	TradedPrice                float32          `json:"traded_price"`
+	IsAmo                      bool             `json:"is_amo"`
+	OrderIdentifier            string           `json:"order_identifier"`
+	InternalRemarks            string           `json:"internal_remarks"`
+	OrderCreatedAt             string           `json:"order_created_at"`
+	OrderUpdatedAt             string           `json:"order_updated_at"`
+	TradeNumber                string           `json:"trade_number,omitempty"`
+	TradeTime                  string           `json:"trade_time,omitempty"`
+	MarketSegmentId            int              `json:"market_segment_id"`
+	GtdOrderStatus             OrderStatus      `json:"gtd_order_status"`
+	SequenceNumber             int              `json:"sequence_number"`
 }
 
 type packet struct {
@@ -211,7 +281,7 @@ var (
 	websocketUrl = url.URL{Scheme: "wss", Host: "wire.asthatrade.com", Path: "ws"}
 )
 
-//Default method to create a new instance of Wire which can be used to get price updates and order updates
+// Default method to create a new instance of Wire which can be used to get price updates and order updates
 func InitializeWire(accessToken string, wire *Wire) error {
 	wire.accessToken = accessToken
 	wire.url = websocketUrl
