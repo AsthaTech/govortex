@@ -1,4 +1,4 @@
-module github.com/AsthaTech/govortex/v2
+module github.com/RupeezyTech/govortex/v2
 
 go 1.16
 

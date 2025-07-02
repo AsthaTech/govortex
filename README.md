@@ -1,20 +1,20 @@
-[![Go Reference](https://pkg.go.dev/badge/github.com/AsthaTech/govortex.svg)](https://pkg.go.dev/github.com/AsthaTech/govortex)
+[![Go Reference](https://pkg.go.dev/badge/github.com/RupeezyTech/govortex.svg)](https://pkg.go.dev/github.com/RupeezyTech/govortex)
 # Vortex API Golang Client
 
 
-Official golang client for communicating with [Vortex API](https://asthatrade.com/vortex)
+Official golang client for communicating with [Vortex API](https://rupeezy.in/vortex)
 
 Vortex APIs are meant for clients who want to execute orders based on their own strategy programatically and for partners to build their own applications. These apis provide a fast and secure way to place trades, manage positions and access real time market data.
 
 
 ## Documentation 
-- [Go Documentation](https://pkg.go.dev/github.com/AsthaTech/govortex)
-- [API Documentation](https://vortex.asthatrade.com/docs/)
+- [Go Documentation](https://pkg.go.dev/github.com/RupeezyTech/govortex)
+- [API Documentation](https://vortex.rupeezy.in/docs/)
 
 ## Installation 
 
 ```
-    go get github.com/AsthaTech/govortex/v2
+    go get github.com/RupeezyTech/govortex/v2
 ```
 
 
@@ -26,7 +26,7 @@ package main
 import (
 	"context"
 
-	govortex "github.com/AsthaTech/govortex/v2"
+	govortex "github.com/RupeezyTech/govortex/v2"
 )
 
 const (
@@ -88,7 +88,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/AsthaTech/govortex/v2"
+	"github.com/RupeezyTech/govortex/v2"
 )
 
 var wire *govortex.Wire

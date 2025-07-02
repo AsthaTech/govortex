@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/AsthaTech/govortex/v2"
+	"github.com/RupeezyTech/govortex/v2"
 )
 
 var wire *govortex.Wire

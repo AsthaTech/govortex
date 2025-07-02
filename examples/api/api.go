@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	govortex "github.com/AsthaTech/govortex/v2"
+	govortex "github.com/RupeezyTech/govortex/v2"
 )
 
 const (
