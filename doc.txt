@@ -229,6 +229,8 @@ type ExchangeTypes string
 
 const (
 	ExchangeTypesNSEFO       ExchangeTypes = "NSE_FO"
+	ExchangeTypesBSEFO       ExchangeTypes = "BSE_FO"
+	ExchangeTypesBSEEQUITY   ExchangeTypes = "BSE_EQ"
 	ExchangeTypesNSEEQUITY   ExchangeTypes = "NSE_EQ"
 	ExchangeTypesNSECURRENCY ExchangeTypes = "NSE_CD"
 	ExchangeTypesMCX         ExchangeTypes = "MCX_FO"
@@ -348,26 +350,32 @@ type GttInfoOrder struct {
 }
 
 type GttLegs struct {
-	SlTriggerPercent     *float64 `json:"sl_trigger_percent"`     // Optional: Stop loss trigger percentage.
-	ProfitTriggerPercent *float64 `json:"profit_trigger_percent"` // Optional: Profit trigger percentage.
+	SlTriggerPercent     *float64       `json:"sl_trigger_percent"`     // Optional: Stop loss trigger percentage.
+	ProfitTriggerPercent *float64       `json:"profit_trigger_percent"` // Optional: Profit trigger percentage.
+	SlVariety            *VarietyTypes  `json:"sl_variety"`
+	ProfitVariety        *VarietyTypes  `json:"profit_variety"`
+	TrailJumpPoint       *float64       `json:"trail_jump_point"`
+	TrailJumpType        *TrailJumpType `json:"trail_jump_type"`
 }
     GttLegs represents legs of a Good 'til Triggered (GTT) order.
 
 type GttOrderResponse struct {
-	Id              string                   `json:"id"`
-	Token           int                      `json:"token" binding:"required"`
-	Exchange        ExchangeTypes            `json:"exchange" binding:"required"`
-	Symbol          string                   `json:"symbol" binding:"required"`
-	Series          string                   `json:"series" binding:"required"`
-	InstrumentName  InstrumentName           `json:"instrument_name" binding:"required"`
-	ExpiryDate      string                   `json:"expiry_date" binding:"required"`
-	StrikePrice     float64                  `json:"strike_price" binding:"required"`
-	OptionType      OptionType               `json:"option_type" binding:"required"`
-	LotSize         int                      `json:"lot_size" binding:"required"`
-	TriggerType     GttTriggerType           `json:"trigger_type" binding:"required"`
-	TransactionType TransactionTypes         `json:"transaction_type" binding:"required"`
-	TagIds          pq.Int32Array            `json:"tag_ids"`
-	Orders          []GttOrderResponseOrders `json:"orders" binding:"required"`
+	Id                 string                   `json:"id"`
+	Token              int                      `json:"token" binding:"required"`
+	Exchange           ExchangeTypes            `json:"exchange" binding:"required"`
+	Symbol             string                   `json:"symbol" binding:"required"`
+	Series             string                   `json:"series" binding:"required"`
+	InstrumentName     InstrumentName           `json:"instrument_name" binding:"required"`
+	ExpiryDate         string                   `json:"expiry_date" binding:"required"`
+	StrikePrice        float64                  `json:"strike_price" binding:"required"`
+	OptionType         OptionType               `json:"option_type" binding:"required"`
+	LotSize            int                      `json:"lot_size" binding:"required"`
+	TriggerType        GttTriggerType           `json:"trigger_type" binding:"required"`
+	TransactionType    TransactionTypes         `json:"transaction_type" binding:"required"`
+	TagIds             pq.Int32Array            `json:"tag_ids"`
+	Product            ProductTypes             `json:"product"`
+	ParentMiddlewareId *uint                    `json:"parent_middleware_id"`
+	Orders             []GttOrderResponseOrders `json:"orders" binding:"required"`
 }
 
 type GttOrderResponseOrders struct {
@@ -542,6 +550,7 @@ type ModifyGttRequest struct {
 	Price        *float64      `json:"price"`         // Required: New price for the GTT order.
 	Quantity     *int          `json:"quantity"`      // Required: New quantity for the GTT order.
 	Variety      ValidityTypes `json:"variety"`       // Required: Type of variety. Accepted values: [RL,RL-MKT].
+	Trail        *Trail        `json:"trail"`         // Optional: Trail information for the GTT order.
 }
     ModifyGttRequest represents a request to modify a Good 'til Triggered (GTT)
     order.
@@ -809,27 +818,30 @@ type PayoffResponse struct {
 }
 
 type PlaceGttLegRequest struct {
-	Quantity     int          `json:"quantity"`      // Required: Quantity of the leg.
-	Price        float64      `json:"price"`         // Required: Price of the leg.
-	TriggerPrice float64      `json:"trigger_price"` // Required: Trigger price for the leg.
-	ProductType  ProductTypes `json:"product"`       // Required: Type of product for the leg.
+	Quantity     int           `json:"quantity" binding:"required"`
+	Price        *float64      `json:"price"`
+	TriggerPrice float64       `json:"trigger_price" binding:"required"`
+	ProductType  ProductTypes  `json:"product"`
+	Variety      *VarietyTypes `json:"variety"`
+	Trail        *Trail        `json:"trail"`
 }
     PlaceGttLegRequest represents a leg of a Good 'til Triggered (GTT) order.
 
 type PlaceGttRequest struct {
-	Exchange        ExchangeTypes       `json:"exchange"`         // Required: Exchange type.
-	Token           int                 `json:"token"`            // Required: Token of the underlying instrument.
-	TransactionType TransactionTypes    `json:"transaction_type"` // Required: Type of transaction.
-	Variety         ValidityTypes       `json:"variety"`          // Optional: Type of variety. By default RL is considered. Accepted values: [RL,RL-MKT].
-	Quantity        *int                `json:"quantity"`         // Required: Quantity of the order.
-	TriggerPrice    *float64            `json:"trigger_price"`    // Required: Trigger price for the order.
-	Price           *float64            `json:"price"`            // Required: Price of the order.
-	OrderIdentifier string              `json:"order_identifier"` // Required: Identifier for the order.
-	GttTriggerType  GttTriggerType      `json:"gtt_trigger_type"` // Required: Type of GTT trigger.
-	Product         ProductTypes        `json:"product"`          // Required: Type of product.
-	Stoploss        *PlaceGttLegRequest `json:"stoploss"`         // Optional: Stop loss leg of the GTT order.
-	Profit          *PlaceGttLegRequest `json:"profit"`           // Optional: Profit leg of the GTT order.
-	TagIds          []int               `json:"tag_ids"`          // Required: IDs of tags associated with the order.
+	Exchange         ExchangeTypes       `json:"exchange"`           // Required: Exchange type.
+	Token            int                 `json:"token"`              // Required: Token of the underlying instrument.
+	TransactionType  TransactionTypes    `json:"transaction_type"`   // Required: Type of transaction.
+	Variety          ValidityTypes       `json:"variety"`            // Optional: Type of variety. By default RL is considered. Accepted values: [RL,RL-MKT].
+	Quantity         *int                `json:"quantity"`           // Required: Quantity of the order.
+	TriggerPrice     *float64            `json:"trigger_price"`      // Required: Trigger price for the order.
+	Price            *float64            `json:"price"`              // Required: Price of the order.
+	OrderIdentifier  string              `json:"order_identifier"`   // Required: Identifier for the order.
+	GttTriggerType   GttTriggerType      `json:"gtt_trigger_type"`   // Required: Type of GTT trigger.
+	Product          ProductTypes        `json:"product"`            // Required: Type of product.
+	Stoploss         *PlaceGttLegRequest `json:"stoploss"`           // Optional: Stop loss leg of the GTT order.
+	Profit           *PlaceGttLegRequest `json:"profit"`             // Optional: Profit leg of the GTT order.
+	SingleTrailingSL *Trail              `json:"single_trailing_sl"` // Optional: Use when GttTriggerType is single.
+	TagIds           []int               `json:"tag_ids"`            // Required: IDs of tags associated with the order.
 }
     PlaceGttRequest represents a request to place a Good 'til Triggered (GTT)
     order.
@@ -1167,6 +1179,20 @@ type TradingOpportunity struct {
 	BreakEven        []float64     `json:"breakeven"`
 }
 
+type Trail struct {
+	ID             uint           `json:"id"`
+	TrailJumpPoint *float64       `json:"trail_jump_point"`
+	TrailJumpType  *TrailJumpType `json:"trail_jump_type"`
+	TriggerTrail   *float64       `json:"trigger_trail"` // This is only used for gtt order book not for accepting the value, we are using ltp as current trail while creating
+	TrailFirstJump *float64       `json:"trail_first_jump"`
+}
+
+type TrailJumpType string
+
+const (
+	TrailJumpTypePercent TrailJumpType = "Percent"
+	TrailJumpTypePoint   TrailJumpType = "Point"
+)
 type TransactionTypes string
 
 const (
@@ -1301,10 +1327,11 @@ func (v *VortexApi) Holdings(ctx context.Context) (*HoldingsResponse, error)
     a HoldingsResponse and an error.
 
 func (v *VortexApi) Login(ctx context.Context, clientCode string, password string, totp string) (*LoginResponse, error)
-    Login performs the login operation in the Vortex API. It takes a context,
-    client code, password, and TOTP (Time-Based One-Time Password) as input.
-    If the login is successful, the method updates the accessToken field of the
-    VortexApi instance. It returns the LoginResponse and an error.
+    Depricated: Use SSO Login instead. Login performs the login operation
+    in the Vortex API. It takes a context, client code, password, and TOTP
+    (Time-Based One-Time Password) as input. If the login is successful,
+    the method updates the accessToken field of the VortexApi instance.
+    It returns the LoginResponse and an error.
 
 func (v *VortexApi) Logout(ctx context.Context) (*LogoutResponse, error)
     Logout logs the user out from the Vortex API and the access token is then no
@@ -1363,6 +1390,13 @@ func (v *VortexApi) Quotes(ctx context.Context, instruments []string, mode Quote
     Quotes retrieves real-time quote information for the specified instruments
     from the Vortex API. It takes a context, a slice of instrument names,
     and a quote mode as input. It returns a QuoteResponse and an error.
+
+func (v *VortexApi) SSOLogin(ctx context.Context, callback_param string) (string, error)
+    SSOLogin performs the login operation using Single Sign-On (SSO) in the
+    Vortex API. It takes a context and a callback parameter as input. If the
+    applicationId is not set, it returns an error. It returns a URL for the SSO
+    login process. The User will be redirected to the callback url configured on
+    the API Portal.
 
 func (v *VortexApi) SetAccessToken(accessToken string)
 
