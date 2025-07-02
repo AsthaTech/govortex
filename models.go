@@ -212,6 +212,8 @@ type ExchangeTypes string
 
 const (
 	ExchangeTypesNSEFO       ExchangeTypes = "NSE_FO"
+	ExchangeTypesBSEFO       ExchangeTypes = "BSE_FO"
+	ExchangeTypesBSEEQUITY   ExchangeTypes = "BSE_EQ"
 	ExchangeTypesNSEEQUITY   ExchangeTypes = "NSE_EQ"
 	ExchangeTypesNSECURRENCY ExchangeTypes = "NSE_CD"
 	ExchangeTypesMCX         ExchangeTypes = "MCX_FO"
@@ -250,6 +252,13 @@ const (
 	VarietyTypesRegularMarketOrder VarietyTypes = "RL-MKT"
 	VarietyTypesStopLimitOrder     VarietyTypes = "SL"
 	VarietyTypesStopMarketOrder    VarietyTypes = "SL-MKT"
+)
+
+type TrailJumpType string
+
+const (
+	TrailJumpTypePercent TrailJumpType = "Percent"
+	TrailJumpTypePoint   TrailJumpType = "Point"
 )
 
 type ValidityTypes string
@@ -484,20 +493,22 @@ type GttOrderbookResponse struct {
 }
 
 type GttOrderResponse struct {
-	Id              string                   `json:"id"`
-	Token           int                      `json:"token" binding:"required"`
-	Exchange        ExchangeTypes            `json:"exchange" binding:"required"`
-	Symbol          string                   `json:"symbol" binding:"required"`
-	Series          string                   `json:"series" binding:"required"`
-	InstrumentName  InstrumentName           `json:"instrument_name" binding:"required"`
-	ExpiryDate      string                   `json:"expiry_date" binding:"required"`
-	StrikePrice     float64                  `json:"strike_price" binding:"required"`
-	OptionType      OptionType               `json:"option_type" binding:"required"`
-	LotSize         int                      `json:"lot_size" binding:"required"`
-	TriggerType     GttTriggerType           `json:"trigger_type" binding:"required"`
-	TransactionType TransactionTypes         `json:"transaction_type" binding:"required"`
-	TagIds          pq.Int32Array            `json:"tag_ids"`
-	Orders          []GttOrderResponseOrders `json:"orders" binding:"required"`
+	Id                 string                   `json:"id"`
+	Token              int                      `json:"token" binding:"required"`
+	Exchange           ExchangeTypes            `json:"exchange" binding:"required"`
+	Symbol             string                   `json:"symbol" binding:"required"`
+	Series             string                   `json:"series" binding:"required"`
+	InstrumentName     InstrumentName           `json:"instrument_name" binding:"required"`
+	ExpiryDate         string                   `json:"expiry_date" binding:"required"`
+	StrikePrice        float64                  `json:"strike_price" binding:"required"`
+	OptionType         OptionType               `json:"option_type" binding:"required"`
+	LotSize            int                      `json:"lot_size" binding:"required"`
+	TriggerType        GttTriggerType           `json:"trigger_type" binding:"required"`
+	TransactionType    TransactionTypes         `json:"transaction_type" binding:"required"`
+	TagIds             pq.Int32Array            `json:"tag_ids"`
+	Product            ProductTypes             `json:"product"`
+	ParentMiddlewareId *uint                    `json:"parent_middleware_id"`
+	Orders             []GttOrderResponseOrders `json:"orders" binding:"required"`
 }
 
 type GttOrderResponseOrders struct {

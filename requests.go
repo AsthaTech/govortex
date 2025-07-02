@@ -25,8 +25,12 @@ type PlaceOrderRequest struct {
 
 // GttLegs represents legs of a Good 'til Triggered (GTT) order.
 type GttLegs struct {
-	SlTriggerPercent     *float64 `json:"sl_trigger_percent"`     // Optional: Stop loss trigger percentage.
-	ProfitTriggerPercent *float64 `json:"profit_trigger_percent"` // Optional: Profit trigger percentage.
+	SlTriggerPercent     *float64       `json:"sl_trigger_percent"`     // Optional: Stop loss trigger percentage.
+	ProfitTriggerPercent *float64       `json:"profit_trigger_percent"` // Optional: Profit trigger percentage.
+	SlVariety            *VarietyTypes  `json:"sl_variety"`
+	ProfitVariety        *VarietyTypes  `json:"profit_variety"`
+	TrailJumpPoint       *float64       `json:"trail_jump_point"`
+	TrailJumpType        *TrailJumpType `json:"trail_jump_type"`
 }
 
 type ModifyOrderRequest struct {
@@ -85,31 +89,43 @@ type ModifyGttRequest struct {
 	Price        *float64      `json:"price"`         // Required: New price for the GTT order.
 	Quantity     *int          `json:"quantity"`      // Required: New quantity for the GTT order.
 	Variety      ValidityTypes `json:"variety"`       // Required: Type of variety. Accepted values: [RL,RL-MKT].
+	Trail        *Trail        `json:"trail"`         // Optional: Trail information for the GTT order.
 }
 
 // PlaceGttRequest represents a request to place a Good 'til Triggered (GTT) order.
 type PlaceGttRequest struct {
-	Exchange        ExchangeTypes       `json:"exchange"`         // Required: Exchange type.
-	Token           int                 `json:"token"`            // Required: Token of the underlying instrument.
-	TransactionType TransactionTypes    `json:"transaction_type"` // Required: Type of transaction.
-	Variety         ValidityTypes       `json:"variety"`          // Optional: Type of variety. By default RL is considered. Accepted values: [RL,RL-MKT].
-	Quantity        *int                `json:"quantity"`         // Required: Quantity of the order.
-	TriggerPrice    *float64            `json:"trigger_price"`    // Required: Trigger price for the order.
-	Price           *float64            `json:"price"`            // Required: Price of the order.
-	OrderIdentifier string              `json:"order_identifier"` // Required: Identifier for the order.
-	GttTriggerType  GttTriggerType      `json:"gtt_trigger_type"` // Required: Type of GTT trigger.
-	Product         ProductTypes        `json:"product"`          // Required: Type of product.
-	Stoploss        *PlaceGttLegRequest `json:"stoploss"`         // Optional: Stop loss leg of the GTT order.
-	Profit          *PlaceGttLegRequest `json:"profit"`           // Optional: Profit leg of the GTT order.
-	TagIds          []int               `json:"tag_ids"`          // Required: IDs of tags associated with the order.
+	Exchange         ExchangeTypes       `json:"exchange"`           // Required: Exchange type.
+	Token            int                 `json:"token"`              // Required: Token of the underlying instrument.
+	TransactionType  TransactionTypes    `json:"transaction_type"`   // Required: Type of transaction.
+	Variety          ValidityTypes       `json:"variety"`            // Optional: Type of variety. By default RL is considered. Accepted values: [RL,RL-MKT].
+	Quantity         *int                `json:"quantity"`           // Required: Quantity of the order.
+	TriggerPrice     *float64            `json:"trigger_price"`      // Required: Trigger price for the order.
+	Price            *float64            `json:"price"`              // Required: Price of the order.
+	OrderIdentifier  string              `json:"order_identifier"`   // Required: Identifier for the order.
+	GttTriggerType   GttTriggerType      `json:"gtt_trigger_type"`   // Required: Type of GTT trigger.
+	Product          ProductTypes        `json:"product"`            // Required: Type of product.
+	Stoploss         *PlaceGttLegRequest `json:"stoploss"`           // Optional: Stop loss leg of the GTT order.
+	Profit           *PlaceGttLegRequest `json:"profit"`             // Optional: Profit leg of the GTT order.
+	SingleTrailingSL *Trail              `json:"single_trailing_sl"` // Optional: Use when GttTriggerType is single.
+	TagIds           []int               `json:"tag_ids"`            // Required: IDs of tags associated with the order.
 }
 
 // PlaceGttLegRequest represents a leg of a Good 'til Triggered (GTT) order.
 type PlaceGttLegRequest struct {
-	Quantity     int          `json:"quantity"`      // Required: Quantity of the leg.
-	Price        float64      `json:"price"`         // Required: Price of the leg.
-	TriggerPrice float64      `json:"trigger_price"` // Required: Trigger price for the leg.
-	ProductType  ProductTypes `json:"product"`       // Required: Type of product for the leg.
+	Quantity     int           `json:"quantity" binding:"required"`
+	Price        *float64      `json:"price"`
+	TriggerPrice float64       `json:"trigger_price" binding:"required"`
+	ProductType  ProductTypes  `json:"product"`
+	Variety      *VarietyTypes `json:"variety"`
+	Trail        *Trail        `json:"trail"`
+}
+
+type Trail struct {
+	ID             uint           `json:"id"`
+	TrailJumpPoint *float64       `json:"trail_jump_point"`
+	TrailJumpType  *TrailJumpType `json:"trail_jump_type"`
+	TriggerTrail   *float64       `json:"trigger_trail"` // This is only used for gtt order book not for accepting the value, we are using ltp as current trail while creating
+	TrailFirstJump *float64       `json:"trail_first_jump"`
 }
 
 // GttTriggerType represents the trigger type for a Good 'til Triggered (GTT) order.
