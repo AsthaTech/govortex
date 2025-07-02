@@ -42,7 +42,7 @@ func (v *VortexApi) SSOLogin(ctx context.Context, callback_param string) (string
 		return "", fmt.Errorf("applicationId is not set")
 	}
 
-	return fmt.Sprintf("https://flow.rupeezy.in?application_id=%s&cb_param=%s", v.applicationId, callback_param), nil
+	return fmt.Sprintf("https://flow.rupeezy.in?applicationId=%s&cb_param=%s", v.applicationId, callback_param), nil
 }
 
 // ExchangeToken exchanges auth token received for the access_token from the Vortex API.
