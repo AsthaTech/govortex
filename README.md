@@ -14,7 +14,7 @@ Vortex APIs are meant for clients who want to execute orders based on their own 
 ## Installation 
 
 ```
-    go get github.com/AsthaTech/govortex
+    go get github.com/AsthaTech/govortex/v2
 ```
 
 
